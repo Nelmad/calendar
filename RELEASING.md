@@ -14,7 +14,9 @@ cannot release on its own.
    `CHANGELOG.md` entry from "Unreleased" to `## [x.y.z] - YYYY-MM-DD`.
 2. Merge it into `main` once CI is green.
 3. In the Actions tab run **Release** on `main`. The workflow typechecks,
-   tests, builds and stages the version: a stable version with the `latest`
+   tests and builds, refuses a tarball that lacks a path `package.json`
+   declares (`scripts/check-pack.mjs`), and stages the version: a stable
+   version with the `latest`
    dist-tag, a prerelease (`0.2.0-alpha.2`) with `next`, so `latest` never
    moves to a prerelease. The dist-tag of a staged version cannot be changed.
 4. Approve the staged version on npmjs.com: package page → **Staged Packages**

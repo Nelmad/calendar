@@ -78,11 +78,15 @@ jobs:
         if: steps.release.outputs.published == 'false'
         run: npm ci
 
-      - name: Typecheck and test
+      # Build explicitly instead of relying on prepublishOnly during staging,
+      # and refuse to stage a tarball that lacks a path package.json declares.
+      - name: Typecheck, test, build and check the tarball
         if: steps.release.outputs.published == 'false'
         run: |
           npm run typecheck
           npm test
+          npm run build
+          node scripts/check-pack.mjs
 
       # Staged publishing needs npm >= 11.15.0; Node 22 ships npm 10. Upgrade
       # only now, so install and tests run with the same npm as the CI workflow.
@@ -90,8 +94,8 @@ jobs:
         if: steps.release.outputs.published == 'false'
         run: npm install --global npm@11.21.0
 
-      # prepublishOnly builds and verifies dist/. A version that is already
-      # staged (a rerun before approval) is reported, not treated as a failure.
+      # A version that is already staged (a rerun before approval) is reported,
+      # not treated as a failure.
       - name: Stage the version on npm
         if: steps.release.outputs.published == 'false'
         env:
