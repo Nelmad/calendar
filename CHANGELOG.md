@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-10-12
+
+### Changed
+
+- Published from GitHub Actions through npm trusted publishing, with a provenance attestation that links the
+  package to its source commit and build. No code changes since 0.1.0.
+- `repository`, `homepage` and `bugs` point to `github.com/Nelmad/calendar` with the exact owner name.
+
 ## [0.1.0] - 2026-06-10
 
 ### Added

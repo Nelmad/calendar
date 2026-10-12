@@ -1,6 +1,6 @@
 {
   "name": "@nelmad/calendar",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Month-view task calendar with multi-day events, timezone support, and series actions",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -27,7 +27,7 @@
     "LICENSE"
   ],
   "author": "nelmad",
-  "homepage": "https://github.com/nelmad/calendar#readme",
+  "homepage": "https://github.com/Nelmad/calendar#readme",
   "sideEffects": [
     "**/*.css"
   ],
@@ -102,6 +102,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nelmad/calendar.git"
+    "url": "git+https://github.com/Nelmad/calendar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Nelmad/calendar/issues"
   }
 }
