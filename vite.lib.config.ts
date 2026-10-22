@@ -1,53 +1,55 @@
 import {dirname, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-
+import {readFileSync} from 'node:fs';
 import react from '@vitejs/plugin-react';
 import {defineConfig} from 'vite';
 import dts from 'vite-plugin-dts';
 
 const rootDir = dirname(fileURLToPath(import.meta.url));
+const manifest = JSON.parse(readFileSync(resolve(rootDir, 'package.json'), 'utf8'));
+const externals = [...Object.keys(manifest.dependencies), ...Object.keys(manifest.peerDependencies)];
+const clientEntry = resolve(rootDir, 'src/Calendar.tsx');
 
 export default defineConfig({
     plugins: [
         react(),
+        {
+            name: 'calendar-client-boundary',
+            // Only RSC resolvers need a client directive. Ordinary ESM/CJS users
+            // receive the same implementation without Rollup directive warnings.
+            generateBundle(options, bundle) {
+                const esm = options.format === 'es', extension = esm ? 'js' : 'cjs';
+                const entry = bundle[`index.${extension}`];
+                if (entry.type !== 'chunk') throw new Error('Missing root entry');
+                this.emitFile({type: 'asset', fileName: `index.react-server.${extension}`,
+                    source: entry.code.replaceAll(`./Calendar.${extension}`, `./Calendar.client.${extension}`)});
+                this.emitFile({type: 'asset', fileName: `Calendar.client.${extension}`,
+                    source: `'use client';\n${esm ? "export {Calendar} from './Calendar.js';" : "exports.Calendar = require('./Calendar.cjs').Calendar;"}\n`});
+            },
+        },
         dts({
             include: ['src'],
+            exclude: ['src/**/__tests__/**', 'src/**/*.test.ts', 'src/**/*.test.tsx'],
             tsconfigPath: './tsconfig.build.json',
             bundleTypes: true,
         }),
     ],
-    resolve: {
-        alias: {
-            '@': resolve(rootDir, 'src'),
-        },
-    },
     build: {
         lib: {
-            entry: resolve(rootDir, 'src/index.ts'),
+            entry: {index: resolve(rootDir, 'src/index.ts'), Calendar: clientEntry},
             formats: ['es', 'cjs'],
-            fileName: format => (format === 'es' ? 'index.js' : 'index.cjs'),
-            cssFileName: 'index',
+            fileName: (format, name) => `${name}.${format === 'es' ? 'js' : 'cjs'}`,
         },
         rollupOptions: {
-            external: [
-                'react',
-                'react-dom',
-                'react/jsx-runtime',
-                'react-aria-components',
-                '@react-aria/interactions',
-                'dayjs',
-                /^dayjs\/.+/,
-                'classnames',
-            ],
+            preserveEntrySignatures: 'strict',
+            output: {preserveModules: true, preserveModulesRoot: resolve(rootDir, 'src')},
+            external: id => externals.some(name => id === name || id.startsWith(`${name}/`)),
+            onwarn(warning, warn) {
+                if (warning.code === 'MODULE_LEVEL_DIRECTIVE' && warning.id === clientEntry && warning.message.includes('use client')) return;
+                warn(warning);
+            },
         },
-        cssCodeSplit: false,
         outDir: 'dist',
         emptyOutDir: true,
-    },
-    css: {
-        modules: {
-            localsConvention: 'camelCaseOnly',
-            generateScopedName: '[name]__[local]__[hash:base64:5]',
-        },
     },
 });

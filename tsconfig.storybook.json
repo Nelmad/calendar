@@ -1,4 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "include": [".storybook", "stories", "src/css-modules.d.ts"]
+  "include": [".storybook", "stories"]
 }

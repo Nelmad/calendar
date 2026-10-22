@@ -1,0 +1,105 @@
+body {
+    margin: 0;
+    font: 16px system-ui;
+    color: #152339;
+    background: #eff3f8;
+}
+
+.touch-fixture {
+    box-sizing: border-box;
+    padding: 16px;
+    min-height: 1600px;
+}
+
+.touch-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.touch-grid [role="gridcell"] {
+    border: 1px solid #536582;
+    background: white;
+    padding: 28px 8px;
+}
+
+.touch-fixture button, .touch-modal button {
+    min-height: 44px;
+    font: inherit;
+}
+
+.touch-backdrop {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    background: rgb(0 0 0 / 35%);
+}
+
+.touch-modal {
+    background: white;
+    padding: 16px;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 480px;
+    border-radius: 16px 16px 0 0;
+}
+
+.touch-scroll {
+    height: 340px;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y pinch-zoom;
+}
+
+.touch-row {
+    display: flex;
+    height: 72px;
+    border-bottom: 1px solid #ccd3df;
+    align-items: center;
+    gap: 8px;
+}
+
+.touch-primary {
+    flex: 1;
+    text-align: start;
+    border: 0;
+    background: transparent;
+    touch-action: pan-y pinch-zoom;
+}
+
+.touch-handle {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px dotted #536582;
+    touch-action: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.touch-owner {
+    position: fixed;
+    width: 1px;
+    height: 1px;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+
+#touch-state {
+    display: block;
+    padding: 12px 0;
+}
+
+#touch-events {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 10px;
+}
+
+:focus-visible {
+    outline: 3px solid #195fd0;
+}

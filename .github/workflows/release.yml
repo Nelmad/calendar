@@ -1,0 +1,268 @@
+name: Release
+
+# Release proof (spec §19.2, process change 2026-10-22, fix round 1 of PROCESS-V9): a pushed version tag builds and packs
+# the archive once (gate `pack`, the only `npm pack`). The packed Vite/Next consumers and the milestone acceptance
+# (SSR, hydration, keyboard, axe; alpha-acceptance.mjs --milestone=<prerelease id>) install and test that file itself.
+# The gates that read dist (contract fixtures, docs, API report, Storybook) run on the checkout's dist, which
+# `archive-matches-checkout` and `archive-unchanged` require to be byte-identical to the archive before and after them. The
+# Chrome probes build their private entries from the sources of the same checkout. Every gate step runs through
+# scripts/release/gate.mjs, which records its command, environment and outcome; the release manifest lists each gate's
+# outcome and the tool tuples of the run reports, and fails on a missing record. The same file is then published with npm
+# provenance and attached to a GitHub Release. The run reports are kept as workflow artifacts, not in the repository.
+# Pull requests never publish: they run ci.yml only.
+#
+# Authentication: npm trusted publishing (OIDC). Configure @nelmad/calendar on npmjs.com with this repository and the
+# workflow file release.yml; no token is needed. Fallback: an automation token in the NPM_TOKEN repository secret, used
+# only when the OIDC exchange is not configured. Both publish with provenance.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Run every gate and npm publish --dry-run on the packed archive without publishing
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    name: Gate the packed archive
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+      dist-tag: ${{ steps.metadata.outputs.distTag }}
+      prerelease: ${{ steps.metadata.outputs.prerelease }}
+      milestone: ${{ steps.metadata.outputs.milestone }}
+      tarball: ${{ steps.metadata.outputs.tarball }}
+      sha256: ${{ steps.metadata.outputs.sha256 }}
+      integrity: ${{ steps.metadata.outputs.integrity }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm ci --prefix scripts/implementation/spikes
+
+      - run: npx playwright install --with-deps chrome
+        working-directory: scripts/implementation/spikes
+
+      # Fails fast, before the long gate, on a tag that package.json or a dated CHANGELOG section does not match.
+      - name: Version tag matches package.json and a dated CHANGELOG section
+        if: github.ref_type == 'tag'
+        run: |
+          test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+          node --input-type=module -e "import {readFileSync} from 'node:fs'; import {changelogSection, tagVersion} from './scripts/release/release-metadata.mjs';
+            changelogSection(readFileSync('CHANGELOG.md', 'utf8'), tagVersion(process.env.GITHUB_REF_NAME), {dated: true});"
+
+      - run: node scripts/release/gate.mjs typecheck -- npm run typecheck
+
+      - run: node scripts/release/gate.mjs typecheck-storybook -- npm run typecheck:storybook
+
+      - run: node scripts/release/gate.mjs lint -- npm run lint
+
+      - run: node scripts/release/gate.mjs test -- npm test
+
+      - run: node scripts/release/gate.mjs test-host-timezone -- npm test -- src/v02/core/__tests__/date.test.ts src/v02/core/__tests__/locale.test.ts src/v02/core/__tests__/messages.test.tsx
+        env:
+          TZ: Africa/Monrovia
+          LANG: de_DE.UTF-8
+          LC_ALL: de_DE.UTF-8
+
+      - run: node scripts/release/gate.mjs build -- npm run build
+
+      # The only npm pack of the run: every later gate tests this archive, and the publish job publishes it.
+      - run: |
+          mkdir -p "$RUNNER_TEMP/release-tarball" "$RUNNER_TEMP/release-reports"
+          node scripts/release/gate.mjs pack -- npm pack --pack-destination "$RUNNER_TEMP/release-tarball"
+
+      - name: Release metadata of the packed archive
+        id: metadata
+        run: |
+          shopt -s nullglob
+          archives=("$RUNNER_TEMP"/release-tarball/*.tgz)
+          if [ "${#archives[@]}" -ne 1 ]; then echo "::error::expected one packed archive, found ${#archives[@]}"; exit 1; fi
+          echo "TARBALL=${archives[0]}" >> "$GITHUB_ENV"
+          tag=()
+          if [ "$GITHUB_REF_TYPE" = tag ]; then tag=(--tag="$GITHUB_REF_NAME"); fi
+          node scripts/release/release-metadata.mjs --tarball="${archives[0]}" "${tag[@]}" --repository="$GITHUB_REPOSITORY" \
+            --notes="$RUNNER_TEMP/release-reports/release-notes.md" --github-output="$GITHUB_OUTPUT"
+
+      - run: node scripts/release/gate.mjs archive-matches-checkout -- node scripts/release/release-metadata.mjs --tarball="$TARBALL" --verify-checkout
+
+      - run: node scripts/release/gate.mjs typecheck-contract -- npm run typecheck:contract -- --output="$RUNNER_TEMP/release-reports/contracts"
+
+      - run: node scripts/release/gate.mjs typecheck-contract-ts-5.4.5 -- npm run typecheck:contract -- --output="$RUNNER_TEMP/release-reports/contracts-ts-5.4.5"
+        env:
+          CALENDAR_TYPESCRIPT_COMPILER: scripts/implementation/spikes/node_modules/typescript-min/lib/tsc.js
+
+      - run: node scripts/release/gate.mjs check-requirements -- npm run check:requirements
+
+      - run: node scripts/release/gate.mjs self-checks -- node --test scripts/implementation/requirements.checks.mjs scripts/implementation/harness.checks.mjs scripts/release/release-metadata.checks.mjs
+
+      - run: node scripts/release/gate.mjs check-timezones -- npm run check:timezones
+
+      - run: node scripts/release/gate.mjs check-transitions -- npm run check:transitions
+
+      - run: node scripts/release/gate.mjs check-docs -- npm run check:docs -- --output "$RUNNER_TEMP/release-reports/docs-parity.json"
+
+      - run: node scripts/release/gate.mjs docs-gate-selftest -- node scripts/docs/check-docs-selftest.mjs --output "$RUNNER_TEMP/release-reports/docs-gate-selftest.json"
+
+      - run: node scripts/release/gate.mjs check-api -- npm run check:api
+
+      - run: node scripts/release/gate.mjs build-storybook -- npm run build-storybook -- --disable-telemetry
+
+      # The consumers install the archive itself; nothing is rebuilt or packed again.
+      - run: node scripts/release/gate.mjs packed-consumers -- npm run check:package -- --tarball="$TARBALL" --output="$RUNNER_TEMP/release-reports/packed-consumers"
+
+      # The milestone gate of plan §12.2 on the same archive; a milestone without an acceptance fails here.
+      - run: node scripts/release/gate.mjs milestone-acceptance -- node scripts/implementation/alpha-acceptance.mjs --milestone="$MILESTONE" --tarball="$TARBALL" --output="$RUNNER_TEMP/release-reports/milestone-acceptance"
+        env:
+          MILESTONE: ${{ steps.metadata.outputs.milestone }}
+
+      - run: node scripts/release/gate.mjs browser-probes -- node scripts/implementation/browser-probes.mjs --output="$RUNNER_TEMP/release-reports/browser-probes"
+
+      - run: node scripts/release/gate.mjs archive-unchanged -- node scripts/release/release-metadata.mjs --tarball="$TARBALL" --verify-checkout
+
+      # Also after a failed gate: the manifest records which gate failed or never ran, and passes only when all passed.
+      - name: Release manifest of the packed archive
+        if: always() && steps.metadata.outcome == 'success'
+        run: |
+          tag=()
+          if [ "$GITHUB_REF_TYPE" = tag ]; then tag=(--tag="$GITHUB_REF_NAME"); fi
+          node scripts/release/release-metadata.mjs --tarball="$TARBALL" "${tag[@]}" --repository="$GITHUB_REPOSITORY" \
+            --manifest="$RUNNER_TEMP/release-reports/release-manifest.json" --gate-log="$RUNNER_TEMP/release-reports/gates.jsonl" --reports="$RUNNER_TEMP/release-reports"
+
+      - name: npm publish --dry-run on the same archive
+        env:
+          TARBALL: ${{ runner.temp }}/release-tarball/${{ steps.metadata.outputs.tarball }}
+          DIST_TAG: ${{ steps.metadata.outputs.distTag }}
+        run: npm publish "$TARBALL" --dry-run --access public --tag "$DIST_TAG"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-tarball
+          path: ${{ runner.temp }}/release-tarball
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-reports
+          path: ${{ runner.temp }}/release-reports
+
+  publish:
+    name: Publish the gated archive
+    needs: gate
+    # Only a version tag, never a pull request; a manual run publishes only on a tag with dry-run switched off.
+    if: >-
+      github.ref_type == 'tag' && startsWith(github.ref_name, 'v') && github.event_name != 'pull_request' &&
+      (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry-run == false))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Configure required reviewers for this environment in the repository settings: a pushed tag then waits for an
+    # explicit approval before anything is published. Bind npm trusted publishing to the same environment.
+    environment: npm-release
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      TARBALL_NAME: ${{ needs.gate.outputs.tarball }}
+      VERSION: ${{ needs.gate.outputs.version }}
+      DIST_TAG: ${{ needs.gate.outputs.dist-tag }}
+      INTEGRITY: ${{ needs.gate.outputs.integrity }}
+      SHA256: ${{ needs.gate.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing needs npm 11.5.1 or newer.
+      - run: npm install --global npm@11.19.0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-tarball
+          path: ${{ runner.temp }}/release-tarball
+
+      # The gate reports are the durable proof of this release: they are attached to the GitHub Release below,
+      # so they outlive the workflow artifact retention.
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-reports
+          path: ${{ runner.temp }}/release-reports
+
+      - name: The downloaded archive is the gated one and matches the tag
+        run: |
+          TARBALL="$RUNNER_TEMP/release-tarball/$TARBALL_NAME"
+          echo "TARBALL=$TARBALL" >> "$GITHUB_ENV"
+          echo "$SHA256  $TARBALL" | sha256sum --check --strict
+          node scripts/release/release-metadata.mjs --tarball="$TARBALL" --tag="$GITHUB_REF_NAME" --repository="$GITHUB_REPOSITORY" \
+            --notes="$RUNNER_TEMP/release-notes.md" --github-output="$GITHUB_OUTPUT"
+
+      - name: npm publish with provenance
+        env:
+          # Empty unless the fallback secret exists; trusted publishing (OIDC) is used first.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # Registry reads are anonymous: the setup-node .npmrc holds only the publish credential.
+          touch "$RUNNER_TEMP/anonymous.npmrc"
+          published="$(npm view "@nelmad/calendar@$VERSION" dist.integrity --userconfig "$RUNNER_TEMP/anonymous.npmrc" 2>/dev/null || true)"
+          if [ -n "$published" ]; then
+            # A re-run after a successful publish: the registry must already hold exactly these bytes.
+            test "$published" = "$INTEGRITY" || { echo "::error::$VERSION is on npm with integrity $published, not $INTEGRITY"; exit 1; }
+            echo "$VERSION is already published with the same integrity"
+          else
+            npm publish "$TARBALL" --provenance --access public --tag "$DIST_TAG"
+          fi
+
+      - name: Registry serves the same bytes with a verified provenance attestation
+        env:
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/anonymous.npmrc
+        run: |
+          for _ in 1 2 3 4 5 6 7 8 9 10; do
+            published="$(npm view "@nelmad/calendar@$VERSION" dist.integrity 2>/dev/null || true)"
+            if [ -n "$published" ]; then break; fi
+            sleep 30
+          done
+          test "$published" = "$INTEGRITY" || { echo "::error::registry integrity '$published' differs from $INTEGRITY"; exit 1; }
+          check="$RUNNER_TEMP/signatures"
+          mkdir -p "$check" && cd "$check"
+          npm init --yes > /dev/null
+          npm install --no-audit --no-fund "@nelmad/calendar@$VERSION" react@19 react-dom@19
+          npm audit signatures
+
+      - name: GitHub Release with the CHANGELOG section and the archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PRERELEASE: ${{ needs.gate.outputs.prerelease }}
+        run: |
+          flags=()
+          if [ "$PRERELEASE" = true ]; then flags+=(--prerelease); else flags+=(--latest); fi
+          assets=("$TARBALL" "$RUNNER_TEMP/release-reports/release-manifest.json" "$RUNNER_TEMP/release-reports/gates.jsonl")
+          for asset in "${assets[@]}"; do test -s "$asset" || { echo "::error::missing release asset $asset"; exit 1; }; done
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "${assets[@]}" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "${assets[@]}" --verify-tag --title "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/release-notes.md" "${flags[@]}"
+          fi

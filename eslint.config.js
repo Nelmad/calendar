@@ -12,10 +12,24 @@ export default defineConfig(
             'node_modules/**',
             'coverage/**',
             'scripts/**',
+            // The former evidence directory (archived outside the repository on 2026-10-22, git-ignored) may remain in a
+            // local checkout; its recorded scripts are kept exactly as they ran and are not linted.
+            'docs/implementation/evidence/**',
+            'examples/*/dist/**',
+            'examples/*/dist-server/**',
+            'examples/*/.next/**',
+            'examples/*/next-env.d.ts',
         ],
     },
     js.configs.recommended,
     tseslint.configs.recommended,
+    {
+        // Node entry points of the runnable examples (SSR server, configs).
+        files: ['examples/*/*.mjs'],
+        languageOptions: {
+            globals: {console: 'readonly', process: 'readonly', URL: 'readonly'},
+        },
+    },
     {
         files: ['**/*.{ts,tsx}'],
         plugins: {

@@ -1,1 +1,0 @@
-export {EventChip} from './EventChip';

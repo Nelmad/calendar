@@ -1,7 +1,7 @@
 /** @type {import('stylelint').Config} */
 export default {
     extends: ['stylelint-config-standard'],
-    ignoreFiles: ['dist/**', 'storybook-static/**', 'node_modules/**', 'coverage/**'],
+    ignoreFiles: ['**/dist/**', 'storybook-static/**', '**/node_modules/**', 'coverage/**', '**/.next/**'],
     rules: {
         'selector-class-pattern': null,
         'custom-property-pattern': null,

@@ -1,0 +1,29 @@
+{
+  "name": "@nelmad/calendar-feasibility",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Private T02 experiments; not the Calendar SDK or release evidence",
+  "scripts": {
+    "temporal": "node temporal.mjs",
+    "dev": "vite --host 127.0.0.1 --port 4178 --strictPort",
+    "browser": "node browser.mjs",
+    "touch": "node touch.mjs",
+    "bundle": "node bundle.mjs"
+  },
+  "dependencies": {
+    "@internationalized/date": "3.12.2",
+    "@react-stately/flags": "3.2.1",
+    "react": "18.3.1",
+    "react-aria-components": "1.18.0",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "4.7.0",
+    "axe-core": "4.14.0",
+    "playwright": "1.55.1",
+    "typescript": "5.9.3",
+    "typescript-min": "npm:typescript@5.4.5",
+    "vite": "6.4.3"
+  }
+}

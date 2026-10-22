@@ -1,0 +1,27 @@
+{
+  "name": "nelmad-calendar-example-vite",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && vite build --ssr src/entry-server.tsx --outDir dist-server",
+    "start": "node server.mjs",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@nelmad/calendar": "file:../calendar.tgz",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.20",
+    "@types/react-dom": "18.3.6",
+    "typescript": "5.9.3",
+    "typescript-min": "npm:typescript@5.4.5",
+    "vite": "6.4.3"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true,
+    "fsevents": false
+  }
+}
