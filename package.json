@@ -117,6 +117,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Nelmad/calendar.git"
+    "url": "git+https://github.com/Nelmad/calendar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Nelmad/calendar/issues"
   }
 }

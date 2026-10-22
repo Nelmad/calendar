@@ -330,6 +330,13 @@ Breaking replacement of 0.1. No compatibility layer; see the [migration guide](d
 
 This candidate is not published. Responsive and mobile layouts, actions, sources, `neutralTheme`, render slots and class
 callbacks are planned for `0.2.0-alpha.2`; selection, creation and moving items for `0.2.0-beta.1`.
+## [0.1.1] - 2026-10-12
+
+### Changed
+
+- Published from GitHub Actions through npm trusted publishing, with a provenance attestation that links the
+  package to its source commit and build. No code changes since 0.1.0.
+- `repository`, `homepage` and `bugs` point to `github.com/Nelmad/calendar` with the exact owner name.
 
 ## [0.1.0] - 2026-06-10
 
