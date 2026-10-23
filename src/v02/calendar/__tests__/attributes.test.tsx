@@ -139,8 +139,9 @@ describe('SSR stability of consumer styling values (§10.3.2, §10.3.3, R63)', (
             'nc-item-accent|color:definitely-not-a-color']);
         const errors: unknown[] = [];
         const hydrated = document.createElement('div'); hydrated.innerHTML = html; document.body.append(hydrated);
-        const root = hydrateRoot(hydrated, <Calendar {...input()}/>, {onRecoverableError: error => errors.push(error)});
-        await act(async () => {});
+        // Inside act: outside it the hydration is a Scheduler task that a busy frame defers past an empty act (serverStyle.test.tsx).
+        let root: ReturnType<typeof hydrateRoot> | undefined;
+        await act(async () => { root = hydrateRoot(hydrated, <Calendar {...input()}/>, {onRecoverableError: error => errors.push(error)}); });
         try {
             expect(errors).toEqual([]);
             // The only addition is the post-commit geometry variable of the view (QA-D-1-03), never a consumer value.
@@ -162,7 +163,7 @@ describe('SSR stability of consumer styling values (§10.3.2, §10.3.3, R63)', (
             for (const scope of [client, hydrated]) expect((accent(scope, 'a').firstElementChild as HTMLElement).style.color).toBe('var(--undefined-accent)');
             expect(client.querySelector<HTMLElement>('li[data-item-id="a"] .nc-button')!.style.length).toBe(0);
             await act(async () => clientRoot.unmount());
-        } finally { await act(async () => root.unmount()); document.body.innerHTML = ''; }
+        } finally { await act(async () => root!.unmount()); document.body.innerHTML = ''; }
     });
 });
 

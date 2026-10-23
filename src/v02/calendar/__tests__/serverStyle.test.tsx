@@ -33,10 +33,12 @@ async function hydrateBlocked(calendar: CalendarProps) {
     const root = container.querySelector<HTMLElement>('.nc-calendar')!, grid = container.querySelector<HTMLElement>('.nc-month')!;
     const attribute = root.getAttribute('style'), rootStyle = block(root), gridStyle = block(grid), errors: unknown[] = [];
     const cssText = [vi.spyOn(rootStyle, 'cssText', 'set'), vi.spyOn(gridStyle, 'cssText', 'set')];
-    const hydrated = hydrateRoot(container, <Calendar {...calendar}/>, {onRecoverableError: error => errors.push(error)});
-    await act(async () => {});
+    // Hydrated inside act, so the hydration commit is on the act queue: a hydrateRoot outside act is a Scheduler task that a
+    // busy frame (5 ms, a loaded worker) yields past the one macrotask an empty act waits for, and the result is read unhydrated.
+    let hydrated: ReturnType<typeof hydrateRoot> | undefined;
+    await act(async () => { hydrated = hydrateRoot(container, <Calendar {...calendar}/>, {onRecoverableError: error => errors.push(error)}); });
     const result = {root: values(rootStyle), grid: values(gridStyle), attribute, attributeAfter: root.getAttribute('style'), errors, cssTextWrites: cssText.flatMap(spy => spy.mock.calls)};
-    await act(async () => { hydrated.unmount(); });
+    await act(async () => { hydrated!.unmount(); });
     return result;
 }
 beforeEach(() => { resetSurfaceWarnings(); vi.spyOn(console, 'warn').mockImplementation(() => {}); });
@@ -113,8 +115,10 @@ describe('server-rendered item colors under a strict CSP (spec v8 §10.3.4)', ()
         container.innerHTML = renderToString(<Calendar {...calendar}/>); document.body.append(container);
         const styled = [...container.querySelectorAll<HTMLElement>('[style]')], blocked = new Map(styled.map(element => [element, block(element)]));
         expect(styled.map(element => element.getAttribute('style')).join(' ')).not.toMatch(/position|important/);
-        const hydrated = hydrateRoot(container, <Calendar {...calendar}/>), restored = (element: Element) => values(blocked.get(element as HTMLElement)!);
-        await act(async () => {});
+        const restored = (element: Element) => values(blocked.get(element as HTMLElement)!);
+        // Inside act, as in hydrateBlocked: the result is read after the hydration commit, never before it.
+        let hydrated: ReturnType<typeof hydrateRoot> | undefined;
+        await act(async () => { hydrated = hydrateRoot(container, <Calendar {...calendar}/>); });
         const result = Object.fromEntries([...container.querySelectorAll<HTMLElement>('li[data-item-id]')].map(row => {
             const surface = row.querySelector('[data-agenda-control="primary"]') ?? row, marker = row.querySelector('.nc-item-accent')!;
             const read = (element: Element) => blocked.has(element as HTMLElement) ? restored(element) : {};
@@ -122,7 +126,7 @@ describe('server-rendered item colors under a strict CSP (spec v8 §10.3.4)', ()
         }));
         const root = container.querySelector('.nc-calendar')!;
         expect(restored(root)).toEqual({'--nelmad-calendar-color-accent': '#0b57d0'});
-        await act(async () => { hydrated.unmount(); });
+        await act(async () => { hydrated!.unmount(); });
         const client = document.createElement('div'), clientRoot = createRoot(client);
         await act(async () => { clientRoot.render(<Calendar {...calendar}/>); });
         expect(result).toEqual(rows(client));

@@ -24,7 +24,9 @@ describe('token declarations on the server and the client (QA-14, §10.3.2)', ()
         expect(html).not.toMatch(/position:fixed|exfil|!important|"open/);
         const errors: unknown[] = [];
         const hydrated = document.createElement('div'); hydrated.innerHTML = html; document.body.append(hydrated);
-        const root = hydrateRoot(hydrated, <Calendar {...props()}/>, {onRecoverableError: error => errors.push(error)});
+        // Inside act: outside it the hydration is a Scheduler task that a busy frame defers past the next act (serverStyle.test.tsx).
+        let root: ReturnType<typeof hydrateRoot> | undefined;
+        await act(async () => { root = hydrateRoot(hydrated, <Calendar {...props()}/>, {onRecoverableError: error => errors.push(error)}); });
         const client = document.createElement('div'); document.body.append(client);
         const clientRoot = createRoot(client);
         await act(async () => { clientRoot.render(<Calendar {...props()}/>); });
@@ -41,7 +43,7 @@ describe('token declarations on the server and the client (QA-14, §10.3.2)', ()
                 '[@nelmad/calendar] tokens.components.itemBackground: Expected a single CSS declaration value',
                 '[@nelmad/calendar] tokens.components.itemText: Expected a single CSS declaration value']);
         } finally {
-            await act(async () => { root.unmount(); clientRoot.unmount(); });
+            await act(async () => { root!.unmount(); clientRoot.unmount(); });
         }
     });
 });
@@ -72,7 +74,8 @@ describe('item color declarations on the server and the client (spec v8 §10.3.3
         expect([...server.querySelectorAll('li[data-item-id] [style]')].map(node => node.getAttribute('style'))).toEqual(hostile.map(() => 'color:rgb(1, 2, 3)'));
         const errors: unknown[] = [];
         const hydrated = document.createElement('div'); hydrated.innerHTML = html; document.body.append(hydrated);
-        const root = hydrateRoot(hydrated, <Calendar {...colors()}/>, {onRecoverableError: error => errors.push(error)});
+        let root: ReturnType<typeof hydrateRoot> | undefined;
+        await act(async () => { root = hydrateRoot(hydrated, <Calendar {...colors()}/>, {onRecoverableError: error => errors.push(error)}); });
         const client = document.createElement('div'); document.body.append(client);
         const clientRoot = createRoot(client);
         await act(async () => { clientRoot.render(<Calendar {...colors()}/>); });
@@ -83,7 +86,7 @@ describe('item color declarations on the server and the client (spec v8 §10.3.3
             expect(messages).toHaveLength(hostile.length * 4);
             expect(messages.every(message => message.endsWith('Expected a single CSS declaration value; ignored'))).toBe(true);
         } finally {
-            await act(async () => { root.unmount(); clientRoot.unmount(); });
+            await act(async () => { root!.unmount(); clientRoot.unmount(); });
         }
     });
 });
