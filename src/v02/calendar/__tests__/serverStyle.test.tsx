@@ -33,8 +33,8 @@ async function hydrateBlocked(calendar: CalendarProps) {
     const root = container.querySelector<HTMLElement>('.nc-calendar')!, grid = container.querySelector<HTMLElement>('.nc-month')!;
     const attribute = root.getAttribute('style'), rootStyle = block(root), gridStyle = block(grid), errors: unknown[] = [];
     const cssText = [vi.spyOn(rootStyle, 'cssText', 'set'), vi.spyOn(gridStyle, 'cssText', 'set')];
-    // Hydrated inside act, so the hydration commit is on the act queue: a hydrateRoot outside act is a Scheduler task that a
-    // busy frame (5 ms, a loaded worker) yields past the one macrotask an empty act waits for, and the result is read unhydrated.
+    // Hydrated inside act, so the hydration commit is on the act queue. Outside act it is a Scheduler task: when the 5 ms frame is
+    // spent before it starts (a stalled worker, work queued ahead), it runs after the one macrotask an empty act waits for.
     let hydrated: ReturnType<typeof hydrateRoot> | undefined;
     await act(async () => { hydrated = hydrateRoot(container, <Calendar {...calendar}/>, {onRecoverableError: error => errors.push(error)}); });
     const result = {root: values(rootStyle), grid: values(gridStyle), attribute, attributeAfter: root.getAttribute('style'), errors, cssTextWrites: cssText.flatMap(spy => spy.mock.calls)};

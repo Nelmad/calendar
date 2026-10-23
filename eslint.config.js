@@ -20,7 +20,7 @@ export default defineConfig(
             'examples/*/.next/**',
             'examples/*/next-env.d.ts',
             // Claude Code worktrees (git-ignored) are checkouts of other branches inside this one.
-            '.claude/**',
+            '.claude/worktrees/**',
         ],
     },
     js.configs.recommended,

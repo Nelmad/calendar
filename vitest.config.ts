@@ -22,7 +22,7 @@ export default defineConfig({
     test: {
         environment: 'jsdom',
         setupFiles: ['./vitest.setup.ts'],
-        // Claude Code worktrees (.claude/worktrees, git-ignored) are checkouts of other branches inside this one.
-        exclude: [...configDefaults.exclude, '.claude/**'],
+        // Claude Code worktrees (git-ignored) are checkouts of other branches inside this one.
+        exclude: [...configDefaults.exclude, '.claude/worktrees/**'],
     },
 });
