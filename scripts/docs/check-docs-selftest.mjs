@@ -54,10 +54,11 @@ const cases = [
     {name: 'broken file link', expect: ['relative-links'], edits: [replace('docs/api.ru.md', '(implementation/timezones-candidate.ru.md)', '(implementation/timezones.ru.md)')]},
 ];
 
-// `src` and the generated time zone list feed the displayed-messages and time-zone-count checks; the guides link CI, the release workflow and RELEASING.md.
+// `src` and the generated time zone list feed the displayed-messages and time-zone-count checks; the guides link CI, the release workflow,
+// RELEASING.md and the acceptance script with the reviewed axe exclusion.
 const copied = ['.github/workflows/ci.yml', '.github/workflows/release.yml', 'RELEASING.md', 'README.md', 'README.ru.md', 'CHANGELOG.md', 'LICENSE', 'package.json', 'dist/index.d.ts', 'dist/v02/core/timeZones.generated.js', 'src', 'scripts/docs', 'stories', 'examples/migration',
     'docs/api.md', 'docs/api.ru.md', 'docs/migration-0.1-to-0.2.md', 'docs/migration-0.1-to-0.2.ru.md', 'docs/api', 'docs/implementation/timezones-candidate.en.md',
-    'docs/implementation/timezones-candidate.ru.md', 'docs/implementation/timezones-candidate.json', 'docs/implementation/t19-alpha2-acceptance.md', 'examples/vite', 'examples/next'];
+    'docs/implementation/timezones-candidate.ru.md', 'docs/implementation/timezones-candidate.json', 'scripts/implementation/alpha-acceptance.mjs', 'examples/vite', 'examples/next'];
 const skipped = /(?:^|\/)(?:node_modules|\.next|dist|dist-server)(?:\/|$)/;
 const results = [];
 for (const testCase of cases) {

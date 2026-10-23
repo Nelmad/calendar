@@ -549,7 +549,7 @@ axe-core (WCAG 2.0–2.2 A/AA rules) without violations in the package-owned UI 
 dark color schemes, RTL, all data states, open overlays, a 1280 px desktop and a 390 px phone viewport. One reviewed
 exclusion applies: the experimental `label-content-name-mismatch` rule is not counted for a date cell whose only other
 visible text is its decorative `+N` indicator (the day number is in the cell's name, the count in its description); every
-other node it reports still fails the run ([acceptance report](docs/implementation/t19-alpha2-acceptance.md)).
+other node it reports still fails the run ([acceptance check](scripts/implementation/alpha-acceptance.mjs)).
 
 Not verified yet: screen readers (NVDA, VoiceOver, TalkBack), physical phones and tablets, browsers other than Chrome, and
 a manual contrast, zoom, reflow and text-spacing audit; automated rules cover only part of WCAG. Colors from `tokens`, your CSS and item titles or

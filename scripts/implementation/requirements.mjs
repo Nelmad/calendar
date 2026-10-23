@@ -5,6 +5,10 @@ import {ledgerProblems} from './ledger-evidence.mjs';
 
 const sourcePath = 'docs/specification-0.2.md';
 const planPath = 'docs/implementation-plan-0.2.md';
+// The ledger is a local, git-ignored file since 2026-10-23: `--write` creates it from the specification and the plan (carrying
+// the status and evidence of unchanged records from an earlier local copy); without `--write` an existing copy must match.
+// Without a local copy every record starts `planned`; to keep the statuses of 2026-10-23, seed the file first with
+// `git show c0077e3:docs/implementation/requirements-0.2.json` (after `git fetch origin pull/4/head`; see docs/decisions-0.2.md).
 const outputPath = 'docs/implementation/requirements-0.2.json';
 const source = readFileSync(sourcePath, 'utf8');
 const plan = readFileSync(planPath, 'utf8');
@@ -122,9 +126,12 @@ const result = `${JSON.stringify({
     schemaVersion: 1, specificationSha256: hash(source),
     note: 'Exact source-block coverage; prose includes context. Reference code is not an independent release gate. T01 does not mark implementation requirements passed. Section 20 is out of scope. ' +
         'Evidence paths under docs/implementation/evidence/ refer to historical, unversioned local artifacts that were archived outside the repository on 2026-10-22; ' +
-        'from then on proof is re-runnable checks (tests, type/contract, docs and browser probes with documented commands), CI and npm provenance of the release workflow.',
+        'from then on proof is re-runnable checks (tests, type/contract, docs and browser probes with documented commands), CI and npm provenance of the release workflow. ' +
+        'Paths to docs/implementation/*.md process reports (removed from the repository on 2026-10-23) refer to the local archive and commit c0077e3 (docs/decisions-0.2.md). ' +
+        'The ledger itself is a local, git-ignored file since 2026-10-23; it is not committed.',
     requirements,
 }, null, 2)}\n`;
-if (process.argv.includes('--write')) writeFileSync(outputPath, result);
-else assert.equal(readFileSync(outputPath, 'utf8'), result, 'Ledger is stale; review source/plan changes and run --write');
-console.log(`${requirements.length} source blocks, 74 regression rows, 4 composite scenarios: ${process.argv.includes('--write') ? 'written' : 'verified'}`);
+const write = process.argv.includes('--write');
+if (write) writeFileSync(outputPath, result);
+else if (previous) assert.equal(readFileSync(outputPath, 'utf8'), result, 'Ledger is stale; review source/plan changes and run --write');
+console.log(`${requirements.length} source blocks, 74 regression rows, 4 composite scenarios: ${write ? `written${previous ? '' : ' (no earlier local copy: every record is planned)'}` : previous ? 'verified' : `structure verified; no local ledger at ${outputPath} (run with --write to create it)`}`);

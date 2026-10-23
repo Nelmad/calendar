@@ -113,6 +113,15 @@ test('raw run artifacts are ignored by git and no script depends on docs/impleme
     assert.deepEqual(named.sort(), ['eslint.config.js', 'scripts/implementation/harness.checks.mjs', 'scripts/implementation/requirements.mjs']);
 });
 
+// Docs slimming 2026-10-23: the requirement ledger is a local file, and nested Claude Code worktrees (skipped by the lint
+// and test configs) are not part of the repository either.
+test('the local requirement ledger and nested worktrees are ignored by git', () => {
+    const paths = ['docs/implementation/requirements-0.2.json', '.claude/worktrees/any/package.json'];
+    const result = spawnSync('git', ['check-ignore', '--no-index', '--stdin'], {cwd: root, input: paths.join('\n'), encoding: 'utf8'});
+    assert.deepEqual(result.stdout.trim().split('\n'), paths);
+    assert.equal(spawnSync('git', ['ls-files', '--error-unmatch', paths[0]], {cwd: root, encoding: 'utf8'}).status, 1, 'the ledger is not tracked');
+});
+
 test('the documented Vite example server answers 404 for a missing asset and keeps running', async () => {
     const app = scratch(), port = 4521;
     cpSync(join(root, 'examples/vite/server.mjs'), join(app, 'server.mjs'));

@@ -10,6 +10,7 @@ const output = resolve(process.argv[2] ?? mkdtempSync(join(tmpdir(), 'calendar-v
 mkdirSync(output, {recursive: true});
 const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
 const commands = [
+    // The ledger is local and git-ignored since 2026-10-23: without a local copy this checks the spec/plan correspondence only.
     ['requirements', 'npm', ['run', 'check:requirements']],
     // Decisions 2026-10-22 fix round 1: shape of the carried ledger records (DV8-1-01).
     ['requirements-selftest', 'node', ['--test', 'scripts/implementation/requirements.checks.mjs']],
@@ -38,7 +39,7 @@ const commands = [
     ['harness-selftest', 'node', ['--test', 'scripts/implementation/harness.checks.mjs']],
     // RELEASE-ALIGN 2026-10-23: archive helpers, repository.url and invariants of the owner's staged-publishing Release workflow and of CI.
     ['release-selftest', 'node', ['--test', 'scripts/release/release-metadata.checks.mjs']],
-    // The packed acceptance itself is slow and uses the registry; run it separately (see t14-alpha1-acceptance.md).
+    // The packed acceptance itself is slow and uses the registry; CI runs it in the packed-consumers job (alpha-acceptance.mjs).
     ...['packed-harness.mjs', 'packed-consumers.mjs', 'alpha-acceptance.mjs', 'acceptance-alpha2.mjs', 'responsive-probe.mjs', 'overlay-probe.mjs', 'host-probe.mjs', 'portal-stories-check.mjs', 'actions-sources-probe.mjs', 'themes-slots-probe.mjs', 'examples-dev-probe.mjs', 'month-probe.mjs', 'controller-probe.mjs', 'review2-probe.mjs', 'review3-probe.mjs', 'projection-probe.mjs', 'browser-probes.mjs', 'verify-foundation.mjs'].map(name => [`harness-syntax-${name.replace('.mjs', '')}`, 'node', ['--check', `scripts/implementation/${name}`]]),
 ];
 const sourcePaths = [
@@ -72,7 +73,7 @@ const sourcePaths = [
     'src/v02/calendar/__tests__/hydration.test.tsx',
     'src/v02/calendar/__tests__/model.test.tsx', 'src/v02/calendar/__tests__/diagnostics.test.tsx',
     'src/v02/core/overlayStack.ts', 'src/v02/core/__tests__/overlayStack.test.ts', 'src/v02/calendar/overlays.tsx', 'src/v02/calendar/portal.ts',
-    'src/v02/core/placement.ts', 'src/v02/core/__tests__/placement.test.ts', 'docs/specification-0.2.md', 'docs/implementation-plan-0.2.md', 'docs/implementation/requirements-0.2.json',
+    'src/v02/core/placement.ts', 'src/v02/core/__tests__/placement.test.ts', 'docs/specification-0.2.md', 'docs/implementation-plan-0.2.md', 'docs/decisions-0.2.md',
     'src/v02/calendar/__tests__/overlays.test.tsx', 'src/v02/calendar/__tests__/overlays.subscriptions.test.tsx', 'src/v02/calendar/__tests__/overlays.renders.test.tsx', 'src/v02/primitives/mirror.ts', 'src/v02/primitives/PortalTheme.tsx',
     'scripts/implementation/overlay-entry.tsx', 'scripts/implementation/overlay-probe.mjs',
     'src/v02/calendar/modality.ts', 'src/v02/calendar/__tests__/hosts.test.tsx', 'src/v02/calendar/__tests__/opening.test.tsx', 'scripts/implementation/host-probe.mjs',
@@ -80,7 +81,7 @@ const sourcePaths = [
     'src/v02/calendar/__tests__/actions.test.tsx', 'src/v02/calendar/__tests__/sources.test.tsx', 'scripts/implementation/actions-sources-entry.tsx', 'scripts/implementation/actions-sources-probe.mjs',
     'src/v02/themes/neutral.ts', 'src/v02/themes/preset.ts', 'src/v02/core/appearance.ts', 'src/v02/core/cssValue.ts', 'src/v02/calendar/slots.tsx', 'src/v02/core/__tests__/appearance.test.ts',
     'src/v02/themes/__tests__/neutral.test.tsx', 'src/v02/calendar/__tests__/slots.test.tsx', 'src/v02/calendar/__tests__/attributes.test.tsx',
-    'scripts/implementation/themes-slots-entry.tsx', 'scripts/implementation/themes-slots-probe.mjs', 'docs/implementation/t03-brief-customization.md',
+    'scripts/implementation/themes-slots-entry.tsx', 'scripts/implementation/themes-slots-probe.mjs',
     'src/index.ts', 'src/Calendar.tsx', 'scripts/bundle-css.mjs',
     'src/v02/surface.ts', 'src/v02/public.ts', 'src/v02/public.guard.ts', 'vitest.setup.ts', 'vitest.config.ts', 'src/v02/calendar/__tests__/surface.test.tsx', 'src/v02/calendar/__tests__/surface.ssr.test.tsx',
     'tests/contracts/public/positive.ts', 'tests/contracts/public/negative.ts', 'scripts/implementation/packed-probes/shared/require.cts',
@@ -100,8 +101,7 @@ const sourcePaths = [
     'scripts/implementation/timezones/probe.ts', 'scripts/implementation/timezones/run-capabilities.mjs',
     'scripts/implementation/timezones/runtime/node.json', 'scripts/implementation/timezones/runtime/chrome.json',
     '.github/workflows/release.yml', 'RELEASING.md', 'scripts/check-pack.mjs', 'scripts/release/release-metadata.mjs', 'scripts/release/release-metadata.checks.mjs', 'scripts/implementation/browser-probes.mjs',
-    'docs/implementation/t06-timezones.md', 'docs/implementation/t13-package-cutover.md',
-    'docs/implementation/timezones-candidate.json', 'docs/implementation/t03-brief-sources.md',
+    'docs/implementation/timezones-candidate.json',
     'src/v02/reference.d.ts', 'vite.lib.config.ts', 'stylelint.config.js', '.github/workflows/ci.yml',
     'scripts/implementation/contracts.mjs', 'scripts/implementation/requirements.mjs', 'scripts/implementation/ledger-evidence.mjs', 'scripts/implementation/requirements.checks.mjs',
     'scripts/implementation/spikes/package-lock.json', 'scripts/implementation/verify-foundation.mjs',
@@ -120,9 +120,9 @@ const sourcePaths = [
 ];
 const report = {
     startedAt: new Date().toISOString(), node: process.version, runtimeVersions: process.versions,
-    scope: 'T01/T04–T19 implementation (through the QA fixes of 2026-10-09, the spec draft v7 decisions of 2026-10-09, the residual fixes of 2026-10-19, both fix rounds of review 2026-10-09-1, the fixes of review 2026-10-09-2, the fixes of review 2026-10-09-3 and the spec draft v8 decisions of 2026-10-22 with their fix round 1: selector focus return, the color single-declaration rule, CSSOM restoration of the own package declarations only, the agenda row name, the shape check of carried ledger records, and the spec draft v9 process change of 2026-10-22: re-runnable checks, CI and npm provenance instead of stored raw evidence, its fix round 1: one pack per CI run that the packed consumers and the milestone acceptance test with --tarball, the archive/checkout byte comparison, the Chrome probe gate, exact-case repository.url and a read-only CI token, and its alignment of 2026-10-23 with the staged-publishing Release workflow of the repository owner on main, whose invariants are checked without changing it) and package build, including the alpha.2 public surface gate (responsive layout, agenda presentations, portalContainer, item actions, controlled sources, neutralTheme, item appearance, content/class slots and stable data-* attributes), the overlay ownership tree with public item menus/action sheets and the standalone source selector, portal mirror, live routing and package-owned modal effects. Packed consumers, the packed prerelease acceptance (keyboard/axe/SSR) and the Chrome probes are checked separately; not release evidence.',
+    scope: 'T01/T04–T19 implementation (through the QA fixes of 2026-10-09, the spec draft v7 decisions of 2026-10-09, the residual fixes of 2026-10-19, both fix rounds of review 2026-10-09-1, the fixes of review 2026-10-09-2, the fixes of review 2026-10-09-3 and the spec draft v8 decisions of 2026-10-22 with their fix round 1: selector focus return, the color single-declaration rule, CSSOM restoration of the own package declarations only, the agenda row name, the shape check of carried ledger records, and the spec draft v9 process change of 2026-10-22: re-runnable checks, CI and npm provenance instead of stored raw evidence, its fix round 1: one pack per CI run that the packed consumers and the milestone acceptance test with --tarball, the archive/checkout byte comparison, the Chrome probe gate, exact-case repository.url and a read-only CI token, and its alignment of 2026-10-23 with the staged-publishing Release workflow of the repository owner on main, whose invariants are checked without changing it; since the docs slimming of 2026-10-23 the requirement ledger is a local, git-ignored file) and package build, including the alpha.2 public surface gate (responsive layout, agenda presentations, portalContainer, item actions, controlled sources, neutralTheme, item appearance, content/class slots and stable data-* attributes), the overlay ownership tree with public item menus/action sheets and the standalone source selector, portal mirror, live routing and package-owned modal effects. Packed consumers, the packed prerelease acceptance (keyboard/axe/SSR) and the Chrome probes are checked separately; not release evidence.',
     sourceHashes: Object.fromEntries(sourcePaths.map(path => [path, hash(path)])),
-    openChecks: ['B02-TOUCH physical devices unavailable; 24 emulated scenarios passed (see ../../t02-touch.md)', 'T24/beta.1 move parts of R27/R41 (filter during a move draft, built-in move in the action set); complete supported browser/AT matrix and physical devices', 'T27 timezone RC runtime matrix, transition-spacing qualification and 0.2.x freeze', 'T08 native az-Arab Intl data differs between Node/Chrome: text hydration qualification fails; align locale data before releasing this SSR profile'],
+    openChecks: ['B02-TOUCH physical devices unavailable; 24 emulated scenarios passed (T02)', 'T24/beta.1 move parts of R27/R41 (filter during a move draft, built-in move in the action set); complete supported browser/AT matrix and physical devices', 'T27 timezone RC runtime matrix, transition-spacing qualification and 0.2.x freeze', 'T08 native az-Arab Intl data differs between Node/Chrome: text hydration qualification fails; align locale data before releasing this SSR profile'],
     checks: [],
 };
 for (const [name, command, args, environment = {}] of commands) {

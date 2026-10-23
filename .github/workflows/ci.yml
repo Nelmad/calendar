@@ -35,6 +35,7 @@ jobs:
 
       - run: node scripts/docs/check-docs-selftest.mjs
 
+      # The requirement ledger is local-only (2026-10-23): without it this checks that the spec and the plan correspond.
       - run: npm run check:requirements
 
       - run: node --test scripts/implementation/requirements.checks.mjs scripts/implementation/harness.checks.mjs scripts/release/release-metadata.checks.mjs
