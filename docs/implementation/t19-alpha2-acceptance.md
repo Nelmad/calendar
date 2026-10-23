@@ -561,6 +561,9 @@ packed (`evidence/decisions-2026-10-22/packed/manifest.json`) **58/58**, Chrome 
 - `az-Arab` native SSR mismatch (T08), physical touch (T02/T23) и pilots (T03/T30) остаются открытыми.
 - Candidate собран из незакоммиченного дерева. Публикация — отдельное release-действие пользователя: `npm publish <tgz>`
   без rebuild, затем registry install с той же integrity. Ничего из этого не выполнялось.
+  *Позже (согласование 2026-10-23):* публикация идёт по [RELEASING.md](../../RELEASING.md) — Release workflow на `main`
+  собирает версию из commit и ставит её в npm как staged с provenance, публичной она становится после одобрения с 2FA;
+  `npm publish <tgz>` без rebuild не используется.
 
 <a id="решения-2026-10-22"></a>
 ## Решения 2026-10-22

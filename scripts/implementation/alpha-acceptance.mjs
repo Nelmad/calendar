@@ -4,15 +4,15 @@ import {cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync,
 import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
 import {axeStates, desktopChecks, mobileChecks, ssrScenarios} from './acceptance-alpha2.mjs';
-import {createRecorder, createServers, examples, hash, packCandidate, prepareConsumer, root, runOutcome, tarballArgument, walk} from './packed-harness.mjs';
+import {createRecorder, createServers, examples, hash, nameFilter, packCandidate, prepareConsumer, root, runOutcome, tarballArgument, walk} from './packed-harness.mjs';
 
 // Prerelease acceptance on the packed candidate (plan T14/T19): one archive, isolated Vite (React 18)
 // and Next App Router (React 19) consumers, SSR determinism, hydration, desktop keyboard and axe-core. alpha.2 (T19)
 // adds the responsive/integration slice from acceptance-alpha2.mjs: auto/forced layouts, a 390 px touch phone, overlays,
 // actions, sources, several calendars, ShadowRoot, slots and the theme/density/color-scheme axe matrix.
-// Usage: node scripts/implementation/alpha-acceptance.mjs --milestone=alpha.1|alpha.2 [--tarball=<tgz>] [--output=<dir>] [--only=<regexp>]
+// Usage: node scripts/implementation/alpha-acceptance.mjs --milestone=alpha.1|alpha.2 [--tarball=<tgz>] [--output=<dir>] [--only=<part|part>]
 // (--tarball tests that archive, which must be byte-identical to the checkout's build, instead of building and packing one:
-// the release and CI workflows pack once and run this acceptance and the packed consumers on the same file).
+// CI packs once and runs this acceptance and the packed consumers on the same file).
 // (--only runs a subset of the browser checks while developing the harness; evidence comes from full runs only).
 const argument = name => process.argv.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
 const milestone = argument('milestone') ?? 'alpha.1';
@@ -20,7 +20,7 @@ assert.ok(['alpha.1', 'alpha.2'].includes(milestone), `Unknown milestone ${miles
 // Without --output the run writes to a fresh temporary directory; run reports are never written into the repository.
 const output = resolve(argument('output') ?? mkdtempSync(join(tmpdir(), `calendar-acceptance-${milestone}-evidence-`)));
 const spikes = join(root, 'scripts/implementation/spikes'), probes = join(root, 'scripts/implementation/acceptance-probes');
-const only = argument('only') ? new RegExp(argument('only')) : null;
+const only = nameFilter(argument('only'));
 const temporary = realpathSync(mkdtempSync(join(tmpdir(), 'calendar-acceptance-')));
 mkdirSync(output, {recursive: true});
 const tags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];

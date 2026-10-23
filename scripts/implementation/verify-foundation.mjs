@@ -4,7 +4,7 @@ import {mkdirSync, mkdtempSync, readFileSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
 
-// Local regression run of the repository checks, intentionally not a release-gate runner (release.yml is). Without an
+// Local regression run of the repository checks, intentionally not the CI gate set (ci.yml is). Without an
 // output directory the run writes to a fresh temporary directory; its report is never written into the repository.
 const output = resolve(process.argv[2] ?? mkdtempSync(join(tmpdir(), 'calendar-validation-')));
 mkdirSync(output, {recursive: true});
@@ -17,6 +17,8 @@ const commands = [
     ['transitions', 'npm', ['run', 'check:transitions']],
     ['typecheck', 'npm', ['run', 'typecheck']],
     ['build', 'npm', ['run', 'build']],
+    // RELEASE-ALIGN 2026-10-23: the tarball content check that CI and the owner's Release workflow run before staging.
+    ['check-pack', 'node', ['scripts/check-pack.mjs']],
     ['api-report', 'npm', ['run', 'check:api']],
     ['docs', 'npm', ['run', 'check:docs', '--', '--output', resolve(output, 'docs-parity.json')]],
     ['docs-gate-selftest', 'node', ['scripts/docs/check-docs-selftest.mjs', '--output', resolve(output, 'docs-gate-selftest.json')]],
@@ -34,12 +36,10 @@ const commands = [
     // Review 2026-10-09-2 and process change 2026-10-22: npm cache path, filtered acceptance outcome, stale port, CI artifact upload,
     // raw run artifacts outside git, example server.
     ['harness-selftest', 'node', ['--test', 'scripts/implementation/harness.checks.mjs']],
-    // Process change 2026-10-22: version/dist-tag/notes logic and the shape of the tag-triggered release workflow.
+    // RELEASE-ALIGN 2026-10-23: archive helpers, repository.url and invariants of the owner's staged-publishing Release workflow and of CI.
     ['release-selftest', 'node', ['--test', 'scripts/release/release-metadata.checks.mjs']],
     // The packed acceptance itself is slow and uses the registry; run it separately (see t14-alpha1-acceptance.md).
     ...['packed-harness.mjs', 'packed-consumers.mjs', 'alpha-acceptance.mjs', 'acceptance-alpha2.mjs', 'responsive-probe.mjs', 'overlay-probe.mjs', 'host-probe.mjs', 'portal-stories-check.mjs', 'actions-sources-probe.mjs', 'themes-slots-probe.mjs', 'examples-dev-probe.mjs', 'month-probe.mjs', 'controller-probe.mjs', 'review2-probe.mjs', 'review3-probe.mjs', 'projection-probe.mjs', 'browser-probes.mjs', 'verify-foundation.mjs'].map(name => [`harness-syntax-${name.replace('.mjs', '')}`, 'node', ['--check', `scripts/implementation/${name}`]]),
-    // PROCESS-V9 fix round 1: the recorded release gate runner.
-    ['harness-syntax-release-gate', 'node', ['--check', 'scripts/release/gate.mjs']],
 ];
 const sourcePaths = [
     'README.md', 'README.ru.md', 'CHANGELOG.md', 'docs/api.md', 'docs/api.ru.md', 'docs/migration-0.1-to-0.2.md', 'docs/migration-0.1-to-0.2.ru.md',
@@ -99,7 +99,7 @@ const sourcePaths = [
     'scripts/implementation/timezones/primary.checks.mjs', 'scripts/implementation/timezones/policy.json',
     'scripts/implementation/timezones/probe.ts', 'scripts/implementation/timezones/run-capabilities.mjs',
     'scripts/implementation/timezones/runtime/node.json', 'scripts/implementation/timezones/runtime/chrome.json',
-    '.github/workflows/release.yml', 'scripts/release/release-metadata.mjs', 'scripts/release/release-metadata.checks.mjs', 'scripts/release/gate.mjs', 'scripts/implementation/browser-probes.mjs',
+    '.github/workflows/release.yml', 'RELEASING.md', 'scripts/check-pack.mjs', 'scripts/release/release-metadata.mjs', 'scripts/release/release-metadata.checks.mjs', 'scripts/implementation/browser-probes.mjs',
     'docs/implementation/t06-timezones.md', 'docs/implementation/t13-package-cutover.md',
     'docs/implementation/timezones-candidate.json', 'docs/implementation/t03-brief-sources.md',
     'src/v02/reference.d.ts', 'vite.lib.config.ts', 'stylelint.config.js', '.github/workflows/ci.yml',
@@ -120,7 +120,7 @@ const sourcePaths = [
 ];
 const report = {
     startedAt: new Date().toISOString(), node: process.version, runtimeVersions: process.versions,
-    scope: 'T01/T04–T19 implementation (through the QA fixes of 2026-10-09, the spec draft v7 decisions of 2026-10-09, the residual fixes of 2026-10-19, both fix rounds of review 2026-10-09-1, the fixes of review 2026-10-09-2, the fixes of review 2026-10-09-3 and the spec draft v8 decisions of 2026-10-22 with their fix round 1: selector focus return, the color single-declaration rule, CSSOM restoration of the own package declarations only, the agenda row name, the shape check of carried ledger records, and the spec draft v9 process change of 2026-10-22: re-runnable checks, CI and the tag-triggered release workflow with npm provenance instead of stored raw evidence, and its fix round 1: one pack per workflow run that the packed consumers and the milestone acceptance test with --tarball, the archive/checkout byte comparison, recorded gates, the Chrome probe gate, exact-case repository.url and a read-only CI token) and package build, including the alpha.2 public surface gate (responsive layout, agenda presentations, portalContainer, item actions, controlled sources, neutralTheme, item appearance, content/class slots and stable data-* attributes), the overlay ownership tree with public item menus/action sheets and the standalone source selector, portal mirror, live routing and package-owned modal effects. Packed consumers, the packed prerelease acceptance (keyboard/axe/SSR) and the Chrome probes are checked separately; not release evidence.',
+    scope: 'T01/T04–T19 implementation (through the QA fixes of 2026-10-09, the spec draft v7 decisions of 2026-10-09, the residual fixes of 2026-10-19, both fix rounds of review 2026-10-09-1, the fixes of review 2026-10-09-2, the fixes of review 2026-10-09-3 and the spec draft v8 decisions of 2026-10-22 with their fix round 1: selector focus return, the color single-declaration rule, CSSOM restoration of the own package declarations only, the agenda row name, the shape check of carried ledger records, and the spec draft v9 process change of 2026-10-22: re-runnable checks, CI and npm provenance instead of stored raw evidence, its fix round 1: one pack per CI run that the packed consumers and the milestone acceptance test with --tarball, the archive/checkout byte comparison, the Chrome probe gate, exact-case repository.url and a read-only CI token, and its alignment of 2026-10-23 with the staged-publishing Release workflow of the repository owner on main, whose invariants are checked without changing it) and package build, including the alpha.2 public surface gate (responsive layout, agenda presentations, portalContainer, item actions, controlled sources, neutralTheme, item appearance, content/class slots and stable data-* attributes), the overlay ownership tree with public item menus/action sheets and the standalone source selector, portal mirror, live routing and package-owned modal effects. Packed consumers, the packed prerelease acceptance (keyboard/axe/SSR) and the Chrome probes are checked separately; not release evidence.',
     sourceHashes: Object.fromEntries(sourcePaths.map(path => [path, hash(path)])),
     openChecks: ['B02-TOUCH physical devices unavailable; 24 emulated scenarios passed (see ../../t02-touch.md)', 'T24/beta.1 move parts of R27/R41 (filter during a move draft, built-in move in the action set); complete supported browser/AT matrix and physical devices', 'T27 timezone RC runtime matrix, transition-spacing qualification and 0.2.x freeze', 'T08 native az-Arab Intl data differs between Node/Chrome: text hydration qualification fails; align locale data before releasing this SSR profile'],
     checks: [],

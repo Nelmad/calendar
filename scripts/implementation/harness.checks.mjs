@@ -64,7 +64,7 @@ test('a harness given --tarball tests that archive and refuses one that differs 
     assert.equal(tarballArgument(['node', 'x.mjs', '--tarball=']), undefined);
     assert.equal(tarballArgument(['node', 'x.mjs']), undefined);
     const directory = scratch(), temporary = join(directory, 'temporary'), output = join(directory, 'output'); mkdirSync(temporary); mkdirSync(output);
-    // The checkout's build output must exist: the self-checks run after `npm run build` (CI and release).
+    // The checkout's build output must exist: the self-checks run after `npm run build` in CI.
     const pack = JSON.parse(spawnSync('npm', ['pack', '--json', '--pack-destination', directory], {cwd: root, encoding: 'utf8'}).stdout)[0];
     const tarball = join(directory, pack.filename), recorded = [];
     const run = name => assert.fail(`${name}: a given archive is neither built nor packed`), record = (name, details) => recorded.push([name, details]);

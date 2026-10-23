@@ -1507,7 +1507,9 @@ for `0.2.x` patch releases starts with stable `0.2.0`.
 <a id="releases"></a>
 ## Releases and provenance
 
-Releases are published only by the [release workflow](../.github/workflows/release.yml): one packed archive per version
-tag, every gate run on that file, the same file published with npm provenance under the dist-tag of its version and
-attached to a GitHub Release with the changelog section as notes. `npm audit signatures` in your application verifies the
-registry signatures and provenance attestations; see [Releases and provenance](../README.md#releases).
+Releases follow [RELEASING.md](../RELEASING.md): after CI passes on the commit, a maintainer runs the
+[Release workflow](../.github/workflows/release.yml) on `main`, which stages the version on npm with provenance through
+trusted publishing. The version becomes public only after a maintainer approves it with two-factor authentication; then
+the tag and a GitHub Release with the changelog section are created. Prereleases use the `next` dist-tag.
+`npm audit signatures` in your application verifies the registry signatures and provenance attestations; see
+[Releases and provenance](../README.md#releases).

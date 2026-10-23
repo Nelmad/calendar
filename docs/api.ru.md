@@ -1520,7 +1520,9 @@ patch-релизов `0.2.x` начинается со stable `0.2.0`.
 <a id="releases"></a>
 ## Релизы и provenance
 
-Релизы публикует только [release workflow](../.github/workflows/release.yml): один упакованный архив на version tag, все
-gates на этом файле, тот же файл публикуется с npm provenance под dist-tag своей версии и прикладывается к GitHub Release с
-разделом changelog в качестве notes. `npm audit signatures` в вашем приложении проверяет подписи registry и provenance
-attestations; см. [Релизы и provenance](../README.ru.md#releases).
+Релизы выпускаются по [RELEASING.md](../RELEASING.md): после зелёного CI на commit мейнтейнер запускает
+[Release workflow](../.github/workflows/release.yml) на `main`, который ставит version в npm staged publishing с provenance
+через trusted publishing. Version становится публичной только после подтверждения мейнтейнера с двухфакторной
+аутентификацией; затем создаются tag и GitHub Release с разделом changelog. Prereleases используют dist-tag `next`.
+`npm audit signatures` в вашем приложении проверяет подписи registry и provenance attestations; см.
+[Релизы и provenance](../README.ru.md#releases).

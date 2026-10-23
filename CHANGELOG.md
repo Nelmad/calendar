@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0-alpha.2] - Unreleased
 
-Built on top of `0.2.0-alpha.1`: the responsive and integration slice. The release workflow publishes this archive only
-after the alpha.2 acceptance passes on it in Vite with React 18 and Next.js with React 19. Selection, creation, moving items
-and `interactionPolicy` remain planned for `0.2.0-beta.1`.
+Built on top of `0.2.0-alpha.1`: the responsive and integration slice. It is released only after the alpha.2 acceptance
+passes in CI on the packed archive in Vite with React 18 and Next.js with React 19. Selection, creation, moving items and
+`interactionPolicy` remain planned for `0.2.0-beta.1`.
 
 ### Added
 
@@ -59,9 +59,8 @@ and `interactionPolicy` remain planned for `0.2.0-beta.1`.
   forced layouts, the theme × density × color scheme matrix, custom item content, a toolbar extension and a custom retry,
   and the ShadowRoot theme scope, and allowed/not allowed slot content examples in the API reference.
 - `CalendarDataAttribute`, `CalendarResolvedLayout`, `CalendarResolvedAgendaPresentation` and `CalendarItemView` types.
-- Releases with npm provenance: a pushed version tag runs every gate on one packed archive, publishes that same file with a
-  Sigstore provenance attestation under the dist-tag of its version and creates a GitHub Release with this changelog
-  section; `npm audit signatures` verifies an installed release. See "Releases and provenance" in the README.
+- Prereleases are published under the `next` dist-tag with npm provenance, which links the version to its source commit
+  and build; `npm audit signatures` verifies an installed release. See "Releases and provenance" in the README.
 
 ### Changed
 
@@ -133,7 +132,6 @@ and `interactionPolicy` remain planned for `0.2.0-beta.1`.
 - Under a strict `style-src` the item colors of a server-rendered inline agenda (source accent, `getItemAppearance`
   accent, background and text) are written back after hydration as a client render writes them; before, the hydrated rows
   had none of them until those colors changed.
-
 - A calendar hydrated inside a separately hydrated Suspense boundary (Next.js `loading.tsx`, streaming, deferred data)
   no longer re-renders endlessly: the internal model is memoized by its inputs, so unchanged items are also not
   validated and indexed again on every render, and internal state is written only when it changes.
@@ -330,6 +328,7 @@ Breaking replacement of 0.1. No compatibility layer; see the [migration guide](d
 
 This candidate is not published. Responsive and mobile layouts, actions, sources, `neutralTheme`, render slots and class
 callbacks are planned for `0.2.0-alpha.2`; selection, creation and moving items for `0.2.0-beta.1`.
+
 ## [0.1.1] - 2026-10-12
 
 ### Changed

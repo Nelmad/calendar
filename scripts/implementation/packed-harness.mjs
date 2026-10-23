@@ -20,6 +20,17 @@ export const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 export const npmCache = process.env.CALENDAR_NPM_CACHE ?? join(tmpdir(), 'calendar-npm-cache');
 export const env = {...process.env, CI: '1', NEXT_TELEMETRY_DISABLED: '1', DO_NOT_TRACK: '1', npm_config_cache: npmCache};
 /** A filtered run is a development run: it records its filter and never reports a passing outcome (review 2026-10-09-2). */
+
+/**
+ * The --only filter of the harness runners: '|'-separated literal parts, a check runs when its name contains one of them.
+ * A literal match keeps command-line text out of RegExp construction.
+ */
+export function nameFilter(value) {
+    if (!value) return null;
+    const parts = value.split('|').filter(Boolean);
+    return {source: value, test: name => parts.some(part => name.includes(part))};
+}
+
 export const runOutcome = ({failures, filter}) => failures.length ? 'fail' : filter ? 'partial' : 'pass';
 /** Resolves when nothing listens on 127.0.0.1:`port`; a stale server from an interrupted run is rejected, never served. */
 export function assertPortFree(port) {
@@ -48,7 +59,7 @@ export const tarballArgument = (argv = process.argv) => argv.find(arg => arg.sta
 
 /**
  * The candidate archive. Without `tarball` it builds and packs the checkout once and keeps the archive next to the run
- * report. With `tarball` (PV9-1-01/02: the release and CI workflows pack once and pass that file to every harness) it
+ * report. With `tarball` (PV9-1-01/02: CI packs once and passes that file to every harness) it
  * neither builds nor packs: it reads that archive and first requires it to be byte-identical to the checkout's build
  * output, so the source hashes of the report describe the archive under test.
  */

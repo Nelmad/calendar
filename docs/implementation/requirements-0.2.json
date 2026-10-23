@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "specificationSha256": "d40619813132c26a655c1bc256aed1ad7f65ad63ca7e5921a736cf7c410c0eb6",
+  "specificationSha256": "67cb25d7ebd0a46c828bc7a47506e6f04466edcffdbe8d48382f761228d0707e",
   "note": "Exact source-block coverage; prose includes context. Reference code is not an independent release gate. T01 does not mark implementation requirements passed. Section 20 is out of scope. Evidence paths under docs/implementation/evidence/ refer to historical, unversioned local artifacts that were archived outside the repository on 2026-10-22; from then on proof is re-runnable checks (tests, type/contract, docs and browser probes with documented commands), CI and npm provenance of the release workflow.",
   "requirements": [
     {
@@ -15028,7 +15028,7 @@
       ]
     },
     {
-      "id": "S11.3-dc0122b2473a",
+      "id": "S11.3-22ba38a69809",
       "kind": "specification-block",
       "owner": "T10",
       "contributors": [
@@ -15043,8 +15043,8 @@
         "section": "11.3",
         "startLine": 1531,
         "endLine": 1531,
-        "sha256": "dc0122b2473ac48cba395ac5319f96a17c5cac59aaaa0e8a167df10212989140",
-        "text": "Release manifest (отчёт release workflow, раздел 19.2) перечисляет точные протестированные Node/browser/OS, ICU и tzdata tuples и обе границы каждой опубликованной Node semver range: минимальный patch и последний доступный patch на дату RC. Это representative evidence, а не скрытый whitelist единственных допустимых patch-версий. Минимум проверяются `ru-RU`, `en-US`, одна RTL locale, UTC, положительная и отрицательная timezone, DST gap/fold и историческая смена около полуночи. Все patches внутри опубликованной support range являются поддерживаемыми runtime; найденный после релиза package bug внутри неё обслуживается как compatibility defect. При этом пакет не обещает идентичность произвольно различающихся Intl/tzdata: для server/browser пары вне протестированного tuple потребитель обязан выровнять locale/timezone data документированным polyfill, если native outputs расходятся. Hydration mismatch в протестированном tuple либо в иной поддерживаемой паре с выровненными данными является release blocker/compatibility defect, а не обычным warning."
+        "sha256": "22ba38a69809a785eb433e88825fbef896a198f4c1306f0aec71429aad1b8a4a",
+        "text": "Release manifest (отчёт CI-прогона выпускаемого commit, раздел 19.2) перечисляет точные протестированные Node/browser/OS, ICU и tzdata tuples и обе границы каждой опубликованной Node semver range: минимальный patch и последний доступный patch на дату RC. Это representative evidence, а не скрытый whitelist единственных допустимых patch-версий. Минимум проверяются `ru-RU`, `en-US`, одна RTL locale, UTC, положительная и отрицательная timezone, DST gap/fold и историческая смена около полуночи. Все patches внутри опубликованной support range являются поддерживаемыми runtime; найденный после релиза package bug внутри неё обслуживается как compatibility defect. При этом пакет не обещает идентичность произвольно различающихся Intl/tzdata: для server/browser пары вне протестированного tuple потребитель обязан выровнять locale/timezone data документированным polyfill, если native outputs расходятся. Hydration mismatch в протестированном tuple либо в иной поддерживаемой паре с выровненными данными является release blocker/compatibility defect, а не обычным warning."
       },
       "verification": [
         "automated: state/browser regression",
@@ -20799,7 +20799,7 @@
       ]
     },
     {
-      "id": "S18-71881da34217",
+      "id": "S18-4e584577fa2e",
       "kind": "specification-block",
       "owner": "T29",
       "contributors": [],
@@ -20809,8 +20809,8 @@
         "section": "18",
         "startLine": 1824,
         "endLine": 1824,
-        "sha256": "71881da34217af5bc69d406ff1bd25fc336d68d2ba123f311da22c169150cb0d",
-        "text": "README и API reference публикуются на английском и русском с взаимными ссылками. Обе версии содержат одинаковые public exports/props, defaults, обязательные пары, ограничения, timezone/interval semantics и runnable quick start для одного tarball; переводы не обязаны быть буквальными. Parity check по разделам и проверка примеров обеих версий выполняются в CI на каждом pull request и в release workflow на проверяемом tarball; их отчёт хранится среди CI artifacts прогона. Отсутствие языка либо устаревший контракт в одной версии блокирует docs gate. CIS pilot использует русские README/API, второй участник может выбрать английские; выбранный язык фиксируется в отчёте."
+        "sha256": "4e584577fa2e47e3ab5a93f8d9e9e78955ca6095f1d52e548149b5037bda7c43",
+        "text": "README и API reference публикуются на английском и русском с взаимными ссылками. Обе версии содержат одинаковые public exports/props, defaults, обязательные пары, ограничения, timezone/interval semantics и runnable quick start для одного tarball; переводы не обязаны быть буквальными. Parity check по разделам и проверка примеров обеих версий выполняются в CI на каждом pull request и на выпускаемом commit; их отчёт хранится среди CI artifacts прогона. Отсутствие языка либо устаревший контракт в одной версии блокирует docs gate. CIS pilot использует русские README/API, второй участник может выбрать английские; выбранный язык фиксируется в отчёте."
       },
       "verification": [
         "automated: package/docs checks",
@@ -20830,7 +20830,7 @@
             "docs/implementation/evidence/validation-2026-10-06-t14/manifest.json"
           ],
           "scope": "T14: EN/RU README/API, API report, Storybook stories, runnable Vite/Next examples and migration guide for the alpha.1 slice with the docs gate. Examples for later features and the RC docs gate remain T19/T29. Historical (T14-1-D6): the source hashes recorded in that T14 packed-examples manifest no longer match the tree; the current archive is verified in evidence/residual-2026-10-19/packed.",
-          "migration": "spec v9 process change (2026-10-22): carried from S18-e76a5545b8fd"
+          "migration": "aligned with the staged-publishing release process (2026-10-23): carried from S18-71881da34217; earlier spec v9 process change (2026-10-22): carried from S18-e76a5545b8fd"
         },
         {
           "kind": "partial",
@@ -20840,7 +20840,7 @@
             "docs/implementation/evidence/qa-fixes-2026-10-09/QA-C/docs-parity.json"
           ],
           "scope": "QA-16/QA-24: EN/RU README and API corrected (portals and ShadowRoot styles, CSP, legacy browser zones, breakpoint padding, RSC preset, TS 6 CSS import, token validation); parity gate passes.",
-          "migration": "spec v9 process change (2026-10-22): carried from S18-e76a5545b8fd"
+          "migration": "aligned with the staged-publishing release process (2026-10-23): carried from S18-71881da34217; earlier spec v9 process change (2026-10-22): carried from S18-e76a5545b8fd"
         }
       ]
     },
@@ -21706,7 +21706,7 @@
       "evidence": []
     },
     {
-      "id": "S19.1-ef6e74ce051b",
+      "id": "S19.1-1e4ec315245c",
       "kind": "specification-block",
       "owner": "T32",
       "contributors": [
@@ -21718,8 +21718,8 @@
         "section": "19.1",
         "startLine": 1860,
         "endLine": 1860,
-        "sha256": "ef6e74ce051bebc5c905eef54b9a7a782e2fca59da245b7cba269fe0ef45f7c3",
-        "text": "- каждая строка scope/19.4 сопоставлена в requirement ledger репозитория с re-runnable automated check (команда и test), который выполняет release workflow, либо с явно указанным manual-only сценарием, шагами и ожидаемым результатом; формулировка «где возможно» не является допустимым evidence;"
+        "sha256": "1e4ec315245c78d2e7cfa11597451c314583bd74385217c15bc9bda5b565607e",
+        "text": "- каждая строка scope/19.4 сопоставлена в requirement ledger репозитория с re-runnable automated check (команда и test), который CI выполняет на выпускаемом commit, либо с явно указанным manual-only сценарием, шагами и ожидаемым результатом; формулировка «где возможно» не является допустимым evidence;"
       },
       "verification": [
         "automated: state/browser regression",
@@ -21926,7 +21926,7 @@
       "evidence": []
     },
     {
-      "id": "S19.2-093407a57e98",
+      "id": "S19.2-3719ffaed77f",
       "kind": "specification-block",
       "owner": "T32",
       "contributors": [],
@@ -21936,8 +21936,8 @@
         "section": "19.2",
         "startLine": 1873,
         "endLine": 1873,
-        "sha256": "093407a57e98b5a13005ad8bcec452f5bd0a2e0559ccd97b71eedf88c391227b",
-        "text": "- final publish-candidate tarball с package version `0.2.0`, созданный через `npm pack`, проходит clean-install smoke до публикации; после публикации registry install подтверждает ту же integrity;"
+        "sha256": "3719ffaed77fc9c1a230f5f28fca0919f67f7a1c2eb22dd3292d71b07d49fe50",
+        "text": "- final publish-candidate tarball с package version `0.2.0`, созданный через `npm pack`, проходит clean-install smoke до публикации; после публикации registry install той же version проходит smoke, а её provenance называет проверенный commit;"
       },
       "verification": [
         "automated: packed consumer/release harness",
@@ -21989,7 +21989,7 @@
       "evidence": []
     },
     {
-      "id": "S19.2-3d5fbe8bb4dc",
+      "id": "S19.2-d820af70d3b0",
       "kind": "specification-block",
       "owner": "T32",
       "contributors": [],
@@ -21999,8 +21999,8 @@
         "section": "19.2",
         "startLine": 1877,
         "endLine": 1877,
-        "sha256": "3d5fbe8bb4dc9aceffeae8efe47184c18fbfc8676187093ea89f7fac91ce9591",
-        "text": "Stable gate считается пройденным только по успешному release workflow CI для точного publish-candidate tarball, уже содержащего version `0.2.0`. Workflow запускается push version tag, один раз собирает tarball через `npm pack` и выполняет на этом файле все automated gates: unit/type/e2e/SSR-StrictMode/a11y, packed consumers, bundle/runtime и network checks; Next/Vite, ESM/CJS и SSR fixtures устанавливают этот tgz. Release manifest — отчёт этого run: git SHA, lockfile hash, tgz SHA512/integrity, package contents, команды, tool/runtime versions и outcome каждого gate, ссылки на bundle/runtime samples и traces, network log и датированные manual AT- и pilot-отчёты. Manifest, logs и reports run хранятся как CI artifacts, а не в репозитории. `skip`, missing result и unresolved flake не являются pass; infrastructure rerun сохраняет оба run и причину. Публикуется тот же файл через `npm publish <tgz> --provenance` без rebuild: npm provenance (Sigstore attestation) связывает опубликованный package с commit и workflow run; затем workflow создаёт GitHub Release с notes из раздела CHANGELOG этой версии и приложенным tgz. Любое изменение байтов аннулирует technical gates. Ручные результаты — AT, физические устройства, pilots — оформляются краткими датированными отчётами в docs с integrity проверенного tarball, а не выгрузками raw artifacts."
+        "sha256": "d820af70d3b0f453f379b48fa1922f07e7608d22c916c3d582aaddfb3226cdf8",
+        "text": "Stable gate считается пройденным только по успешному прогону CI на точном commit выпуска, уже содержащем version `0.2.0`. CI один раз собирает на этом commit publish-candidate tarball через `npm pack` и выполняет все automated gates: unit/type/e2e/SSR-StrictMode/a11y, packed consumers, milestone acceptance, browser probes, docs и API report, bundle/runtime и network checks; Next/Vite, ESM/CJS и SSR fixtures устанавливают этот tgz. Release manifest — отчёт этого CI run: git SHA, lockfile hash, tgz SHA512/integrity, package contents, команды, tool/runtime versions и outcome каждого gate, ссылки на bundle/runtime samples и traces, network log и датированные manual AT- и pilot-отчёты. Manifest, logs и reports run хранятся как CI artifacts, а не в репозитории. `skip`, missing result и unresolved flake не являются pass; infrastructure rerun сохраняет оба run и причину. Только после зелёного CI мейнтейнер вручную запускает Release workflow на `main` для этого commit: он повторяет typecheck, tests, build и проверку содержимого pack и через npm trusted publishing (OIDC, без хранимых tokens) ставит эту version в staged publishing с npm provenance (Sigstore attestation, связывающая package с commit и workflow run). Staged version не становится публичной без подтверждения мейнтейнера с 2FA на npmjs.com; tag `vX.Y.Z` и GitHub Release с notes из раздела CHANGELOG этой версии создаются только после этого подтверждения. Prerelease публикуется под dist-tag `next`, stable — под `latest`; `latest` никогда не переходит на prerelease. Проверенный CI tarball и staged tarball собираются из одного commit с тем же lockfile (воспроизводимая сборка); их побайтное совпадение процесс не доказывает, поэтому опубликованную version с проверенным кодом связывает commit в provenance, а любое изменение commit после CI аннулирует technical gates. Ручные результаты — AT, физические устройства, pilots — оформляются краткими датированными отчётами в docs с integrity проверенного tarball, а не выгрузками raw artifacts."
       },
       "verification": [
         "automated: packed consumer/release harness",

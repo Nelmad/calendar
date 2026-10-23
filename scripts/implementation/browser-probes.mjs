@@ -2,12 +2,12 @@ import {spawnSync} from 'node:child_process';
 import {existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join, resolve} from 'node:path';
-import {hash, root, runOutcome} from './packed-harness.mjs';
+import {hash, nameFilter, root, runOutcome} from './packed-harness.mjs';
 
-// The Chrome probes as one gate (PV9-1-01): CI runs it on every pull request and the release workflow on the tag, after
+// The Chrome probes as one gate (PV9-1-01): CI runs it on every pull request and push to main, after
 // `npm run build` and `npm run build-storybook` (the story smoke reads storybook-static). Each probe builds its private
 // entry from the sources of this checkout with Vite and drives system Chrome; its report goes to <output>/<probe>.
-// node scripts/implementation/browser-probes.mjs [--output=<dir>] [--only=<regexp>]
+// node scripts/implementation/browser-probes.mjs [--output=<dir>] [--only=<part|part>]
 // Not run here: locale-probe.mjs, the T08 native Intl qualification. Its two az-Arab cases are a known open Node/Chrome
 // data divergence (open until T27); it is an open check, not a gate, and is run by its documented command.
 export const probes = [
@@ -23,7 +23,7 @@ export const notGated = {'locale-probe.mjs': 'T08 native Intl qualification; kno
 if (process.argv[1] && resolve(process.argv[1]) === resolve(import.meta.filename)) {
     const argument = name => process.argv.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
     const output = resolve(argument('output') ?? mkdtempSync(join(tmpdir(), 'calendar-browser-probes-')));
-    const only = argument('only') ? new RegExp(argument('only')) : null;
+    const only = nameFilter(argument('only'));
     mkdirSync(output, {recursive: true});
     if (!existsSync(join(root, 'storybook-static/index.json'))) throw new Error('storybook-static is missing: run npm run build && npm run build-storybook first');
     const version = path => JSON.parse(readFileSync(join(root, 'scripts/implementation/spikes/node_modules', path, 'package.json'), 'utf8')).version;

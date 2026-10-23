@@ -1,5 +1,13 @@
 import assert from 'node:assert/strict';
 
+/** Text of an HTML fragment for assertions: tags are removed until a fixpoint, so no tag survives a single pass. */
+function textContent(html) {
+    if (html === undefined) return undefined;
+    let text = html, previous;
+    do { previous = text; text = text.replace(/<[^>]*>/g, ''); } while (text !== previous);
+    return text;
+}
+
 // alpha.2 part of the packed-candidate acceptance (plan T19), used by alpha-acceptance.mjs: SSR scenarios of the
 // responsive/integration slice, desktop (1280) and touch phone (390) Chrome flows and the axe state matrix. Each flow
 // works through the public Calendar on the acceptance page (scripts/implementation/acceptance-probes/shared/Acceptance.tsx).
@@ -38,7 +46,7 @@ export const ssrScenarios = [
     ['month-pre-measurement', {scenario: 'month'}, html => {
         // §6.3/§11.3: before the first client measurement every non-empty day has zero lanes and a visible +N.
         assert.equal((html.match(/class="nc-month-item[ "]/g) ?? []).length, 0, 'no item lanes on the server');
-        const overflow = html.split('<div role="gridcell"').slice(1).map(chunk => [/data-date="([^"]+)"/.exec(chunk)[1], /class="nc-overflow"[^>]*>([\s\S]*?)<\/div>/.exec(chunk)?.[1].replace(/<[^>]*>/g, '')])
+        const overflow = html.split('<div role="gridcell"').slice(1).map(chunk => [/data-date="([^"]+)"/.exec(chunk)[1], textContent(/class="nc-overflow"[^>]*>([\s\S]*?)<\/div>/.exec(chunk)?.[1])])
             .filter(([, count]) => count).map(([date, count]) => `${date}:${count}`);
         assert.deepEqual(overflow, ['2026-09-02:+1', '2026-09-03:+3', '2026-09-04:+1', '2026-09-05:+1', '2026-09-08:+1', '2026-09-09:+1', '2026-09-16:+7']);
     }],

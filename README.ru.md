@@ -636,28 +636,28 @@ TypeScript 5.4.5 и 5.9.3). Каждый prop и тип описан в [спр�
 <a id="releases"></a>
 ## Релизы и provenance
 
-Каждый релиз, начиная с `0.2.0-alpha.2`, собирает и публикует только [release workflow](.github/workflows/release.yml)
-этого репозитория — никогда не машина разработчика и не pull request. Push version tag, например `v0.2.0-alpha.2`, один
-раз собирает и упаковывает архив. Упакованные consumers Vite и Next.js и acceptance milestone (`alpha.2`: серверный
-рендеринг, hydration, клавиатура и проверки axe в Chrome) устанавливают и проверяют этот самый файл. Проверки, читающие
-результат сборки (contract fixtures, docs, API report и сборка Storybook), выполняются на сборке checkout, которая до и
-после них должна побайтно совпадать с архивом; проверки типов, lint, тесты и Chrome probes — на том же checkout. Прогон
-записывает команду и итог каждой проверки, и тот же файл публикуется с npm provenance под dist-tag своей версии (`alpha`,
-`beta` или `rc` для prerelease, `latest` для stable). Публикация выполняется в environment `npm-release`, который
-требует явного подтверждения каждого tag мейнтейнером. Затем workflow создаёт GitHub Release с разделом changelog этой
-версии, архивом, release manifest и журналом всех проверок; полные logs и отчёты прогона также хранятся как artifacts
-workflow.
+Релизы выпускаются по [RELEASING.md](RELEASING.md) и публикуются только из GitHub Actions — никогда не с машины
+разработчика и не из pull request. Каждый pull request и каждый push в `main` выполняют в [CI](.github/workflows/ci.yml)
+полный набор проверок: проверки типов, lint, тесты, сборку и проверку содержимого tarball, contract fixtures, docs,
+API report и сборку Storybook; на одном упакованном архиве — consumers Vite и Next.js и acceptance milestone (`alpha.2`:
+серверный рендеринг, hydration, клавиатура и проверки axe в Chrome); а также Chrome probes.
 
-Provenance — подписанная attestation Sigstore, которая связывает опубликованный package с commit и прогоном workflow,
-собравшим его; страница package на npm показывает оба. Чтобы проверить подписи registry и provenance attestations
-установленных в вашем приложении packages, выполните:
+Релиз начинается только после зелёного CI на выпускаемом commit: мейнтейнер вручную запускает
+[Release workflow](.github/workflows/release.yml) на `main`. Он повторяет на этом commit проверки типов, тесты, сборку и
+проверку содержимого tarball и ставит version в npm staged publishing через trusted publishing, без хранимого npm token,
+с provenance attestation. Staged version не становится публичной, пока мейнтейнер не подтвердит её с двухфакторной
+аутентификацией на npmjs.com; только после этого workflow создаёт tag `vX.Y.Z` и GitHub Release с разделом changelog этой
+версии. Prereleases публикуются под dist-tag `next`, stable-версии — под `latest`, поэтому `latest` никогда не указывает на
+prerelease.
+
+Архив, который проверяет CI, и архив, который ставит Release workflow, собираются из одного commit и lockfile: это две
+воспроизводимые сборки этого commit, а не один общий файл. Provenance — подписанная attestation Sigstore, которая
+связывает опубликованный package с этим commit и с прогоном workflow, собравшим его; страница package на npm показывает
+оба. Чтобы проверить подписи registry и provenance attestations установленных в вашем приложении packages, выполните:
 
 ```sh
 npm audit signatures
 ```
-
-Архив, приложенный к GitHub Release, имеет ту же integrity, что и опубликованный
-(`npm view @nelmad/calendar@<version> dist.integrity`).
 
 <a id="license"></a>
 ## Лицензия и приватность

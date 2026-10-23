@@ -8,7 +8,7 @@ import ts from 'typescript';
 
 // Docs gate (spec §18, plan T14): EN/RU parity, API coverage against the published
 // declarations, tested code blocks, no removed or unavailable API presented as usable,
-// relative links. `--output <file>` writes the parity checklist for the release manifest.
+// relative links. `--output <file>` writes the parity checklist for the CI run report.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const at = path => resolve(root, path);
 const read = path => readFileSync(at(path), 'utf8');
@@ -106,7 +106,10 @@ function parse(path) {
 }
 /** GitHub heading anchors, used only to validate links into documents without explicit IDs. */
 function slug(text) {
-    return text.toLowerCase().replace(/<[^>]+>/g, '').replace(/[^\p{L}\p{N}\s_-]/gu, '').trim().replace(/\s/g, '-');
+    let plain = text.toLowerCase(), previous;
+    // Repeat until nothing changes: one pass over nested input such as '<<a>b>' can leave a tag behind.
+    do { previous = plain; plain = plain.replace(/<[^>]*>/g, ''); } while (plain !== previous);
+    return plain.replace(/[^\p{L}\p{N}\s_-]/gu, '').trim().replace(/\s/g, '-');
 }
 /** Names a backtick span refers to: the whole span or its leading identifier (`name=`, `name(`). */
 function spanNames(code) {

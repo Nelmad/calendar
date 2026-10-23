@@ -627,29 +627,28 @@ The [migration guide](docs/migration-0.1-to-0.2.md) has a tested conversion func
 <a id="releases"></a>
 ## Releases and provenance
 
-Every release, starting with `0.2.0-alpha.2`, is built and published only by the
-[release workflow](.github/workflows/release.yml) of this repository, never from a developer machine or a pull request.
-A pushed version tag such as `v0.2.0-alpha.2` builds and packs the archive once. The packed Vite and Next.js consumers
-and the acceptance of the milestone (`alpha.2`: server rendering, hydration, keyboard and axe checks in Chrome) install
-and test that exact file. The checks that read the build output (the contract fixtures, docs, the API report and the
-Storybook build) run on the checkout's build, which must be byte-identical to the archive before and after them; type
-checks, lint, tests and the Chrome probes run on the same checkout. The run records the command and outcome of every
-check, and the same file is published with npm provenance under the dist-tag of its version (`alpha`, `beta` or `rc` for
-a prerelease, `latest` for a stable version). Publishing runs in the `npm-release` environment, which requires an
-explicit maintainer approval of each tag. The workflow then creates a GitHub Release with the changelog section of the
-version, the archive, the release manifest and the log of every check attached; the full logs and reports of the run are
-also kept as workflow artifacts.
+Releases follow [RELEASING.md](RELEASING.md) and are published only from GitHub Actions, never from a developer machine
+or a pull request. Every pull request and every push to `main` runs the full set of checks in
+[CI](.github/workflows/ci.yml): type checks, lint, tests, the build and the tarball content check, the contract fixtures,
+docs, the API report and the Storybook build; on one packed archive the Vite and Next.js consumers and the acceptance of
+the milestone (`alpha.2`: server rendering, hydration, keyboard and axe checks in Chrome); and the Chrome probes.
 
-Provenance is a signed Sigstore attestation that links the published package to the commit and the workflow run that
-built it; the npm package page shows both. To verify the registry signatures and provenance attestations of the packages
-installed in your application, run:
+A release starts only after CI is green on the commit to release: a maintainer runs the
+[Release workflow](.github/workflows/release.yml) on `main` by hand. It repeats the type checks, tests, build and tarball
+content check on that commit and stages the version on npm through trusted publishing, without a stored npm token, with
+a provenance attestation. A staged version is not public until a maintainer approves it with two-factor authentication
+on npmjs.com; only then does the workflow create the `vX.Y.Z` tag and a GitHub Release with the changelog section of the
+version. Prereleases are published under the `next` dist-tag and stable versions under `latest`, so `latest` never
+points to a prerelease.
+
+The archive that CI tests and the archive that the Release workflow stages are built from the same commit and lockfile:
+two reproducible builds of that commit, not one shared file. Provenance is a signed Sigstore attestation that links the
+published package to that commit and to the workflow run that built it; the npm package page shows both. To verify the
+registry signatures and provenance attestations of the packages installed in your application, run:
 
 ```sh
 npm audit signatures
 ```
-
-The archive attached to the GitHub Release has the same integrity as the published one
-(`npm view @nelmad/calendar@<version> dist.integrity`).
 
 <a id="license"></a>
 ## License and privacy

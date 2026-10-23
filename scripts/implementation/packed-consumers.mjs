@@ -51,7 +51,7 @@ try {
         const {directory, versions} = prepareConsumer({kind, temporary, pack, run, record, output, overlays: [join(probes, kind)], refresh}); directories[kind] = directory;
         contracts(directory);
         const compilers = kind === 'next' ? ['typescript-5', 'typescript-min'] : ['typescript', 'typescript-min'];
-        // The tool tuple of the run (release manifest, PV9-1-04): the consumer graph and each compiler of the type fixtures.
+        // The tool tuple of the run (the CI run report, PV9-1-04): the consumer graph and each compiler of the type fixtures.
         report.versions[kind] = {...versions, typescript: Object.fromEntries(compilers.map(compiler => [compiler, JSON.parse(readFileSync(join(directory, 'node_modules', compiler, 'package.json'), 'utf8')).version]))};
         for (const compiler of compilers) for (const mode of ['bundler', 'nodenext']) run(`${kind}-${compiler}-${mode}`, process.execPath, [`node_modules/${compiler}/lib/tsc.js`, '-p', `contracts/tsconfig.${mode}.json`], directory);
         writeFileSync(join(directory, 'package-smoke.mjs'), `

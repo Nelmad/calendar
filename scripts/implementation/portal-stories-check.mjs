@@ -3,7 +3,7 @@ import {createHash} from 'node:crypto';
 import {createServer} from 'node:http';
 import {readFileSync, readdirSync, existsSync, mkdirSync, mkdtempSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
-import {dirname, join, resolve, extname} from 'node:path';
+import {dirname, join, resolve, extname, sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
 // Storybook smoke (T16, extended for T19-V1-04): run after `npm run build-storybook`. Each Portals story's agenda must
@@ -18,7 +18,7 @@ const output = resolve(process.argv[2] ?? mkdtempSync(join(tmpdir(), 'calendar-s
 const require = createRequire(import.meta.url);
 const types = {'.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.woff2': 'font/woff2'};
 const missing = [];
-const server = createServer((req, res) => { const path = resolve(root, '.' + decodeURIComponent(req.url.split('?')[0])); if (!existsSync(path)) { missing.push(req.url); res.writeHead(404); return res.end(); } res.writeHead(200, {'content-type': types[extname(path)] ?? 'application/octet-stream'}); res.end(readFileSync(path)); }).listen(0);
+const server = createServer((req, res) => { const path = resolve(root, '.' + decodeURIComponent(req.url.split('?')[0])); if (path !== root && !path.startsWith(root + sep) || !existsSync(path)) { missing.push(req.url); res.writeHead(404); return res.end(); } res.writeHead(200, {'content-type': types[extname(path)] ?? 'application/octet-stream'}); res.end(readFileSync(path)); }).listen(0);
 const port = server.address().port;
 const {chromium} = await import('./spikes/node_modules/playwright/index.mjs');
 const browser = await chromium.launch({channel: 'chrome', headless: true}), pageErrors = [], consoleMessages = [], checks = [];
