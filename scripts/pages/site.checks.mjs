@@ -123,7 +123,8 @@ test('ids the latest line lacks map to the newest other line that has them', () 
 
 /** Where the inline script of a redirect page sends a visit with this query and hash. */
 function redirect(page, search, hash = '') {
-    const code = /<script>([\s\S]*?)<\/script>/.exec(page)[1];
+    // redirectPage writes exactly one inline <script>; slice it out of our own output rather than parse HTML.
+    const start = page.indexOf('<script>') + '<script>'.length, code = page.slice(start, page.indexOf('</script>', start));
     let target;
     runInNewContext(code, {URLSearchParams, location: {search, hash, replace: url => { target = url; }}});
     return target;
@@ -149,7 +150,7 @@ test('the root iframe.html opens the same story in the latest line (old embeds)'
 
 test('ids are embedded as data: markup in an id cannot close the script', () => {
     const page = redirectPage(site, {'</script><script>alert(1)//': '/calendar/0.2/'}, '');
-    assert.equal(page.match(/<\/script>/g).length, 1);
+    assert.equal(page.split('</script>').length - 1, 1);
     assert.equal(redirect(page, '?id=</script><script>alert(1)//'), '/calendar/0.2/?id=</script><script>alert(1)//');
 });
 
