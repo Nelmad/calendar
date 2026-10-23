@@ -1,0 +1,1803 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-09-07T23:42:27.788Z",
+  "scope": "Sampled identifier usability, not all-instant correctness or full RC runtime matrix",
+  "primaryListSha256": "ccc99cfe3fd7867a2fbdfab03eff48aa5821c2d71c3f86b2360408e5955165d1",
+  "dateRuntime": "@internationalized/date@3.12.2",
+  "sourceHashes": {
+    "probe.ts": "ab791ee0168e9edb86d14939a29f20f7ef671926d4d1de2a71f22e2fc54569e7",
+    "run-capabilities.mjs": "d5f1ed13d94c99c1e47d9e7e26ab1582f1f7fe055c13f338641bc56167b7a381",
+    "../../../src/v02/core/date.ts": "3ecdebdb96a4ee00875f95944d904e5994566b2b14d9d68e9c7fac81757aea52"
+  },
+  "platform": "darwin",
+  "architecture": "arm64",
+  "osRelease": "25.6.0",
+  "runtime": "Chrome 152.0.7977.82",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+  "results": [
+    {
+      "identifier": "Africa/Abidjan",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Accra",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Addis_Ababa",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Algiers",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Asmara",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Bamako",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Bangui",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Banjul",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Bissau",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Blantyre",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Brazzaville",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Bujumbura",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Cairo",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Casablanca",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Ceuta",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Conakry",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Dakar",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Dar_es_Salaam",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Djibouti",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Douala",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/El_Aaiun",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Freetown",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Gaborone",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Harare",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Johannesburg",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Juba",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Kampala",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Khartoum",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Kigali",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Kinshasa",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Lagos",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Libreville",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Lome",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Luanda",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Lubumbashi",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Lusaka",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Malabo",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Maputo",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Maseru",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Mbabane",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Mogadishu",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Monrovia",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Nairobi",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Ndjamena",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Niamey",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Nouakchott",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Ouagadougou",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Porto-Novo",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Sao_Tome",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Tripoli",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Tunis",
+      "supported": true
+    },
+    {
+      "identifier": "Africa/Windhoek",
+      "supported": true
+    },
+    {
+      "identifier": "America/Adak",
+      "supported": true
+    },
+    {
+      "identifier": "America/Anchorage",
+      "supported": true
+    },
+    {
+      "identifier": "America/Anguilla",
+      "supported": true
+    },
+    {
+      "identifier": "America/Antigua",
+      "supported": true
+    },
+    {
+      "identifier": "America/Araguaina",
+      "supported": true
+    },
+    {
+      "identifier": "America/Argentina/Buenos_Aires",
+      "supported": true
+    },
+    {
+      "identifier": "America/Argentina/Catamarca",
+      "supported": true
+    },
+    {
+      "identifier": "America/Argentina/Cordoba",
+      "supported": true
+    },
+    {
+      "identifier": "America/Argentina/Jujuy",
+      "supported": true
+    },
+    {
+      "identifier": "America/Argentina/La_Rioja",
+      "supported": true
+    },
+    {
+      "identifier": "America/Argentina/Mendoza",
+      "supported": true
+    },
+    {
+      "identifier": "America/Argentina/Rio_Gallegos",
+      "supported": true
+    },
+    {
+      "identifier": "America/Argentina/Salta",
+      "supported": true
+    },
+    {
+      "identifier": "America/Argentina/San_Juan",
+      "supported": true
+    },
+    {
+      "identifier": "America/Argentina/San_Luis",
+      "supported": true
+    },
+    {
+      "identifier": "America/Argentina/Tucuman",
+      "supported": true
+    },
+    {
+      "identifier": "America/Argentina/Ushuaia",
+      "supported": true
+    },
+    {
+      "identifier": "America/Aruba",
+      "supported": true
+    },
+    {
+      "identifier": "America/Asuncion",
+      "supported": true
+    },
+    {
+      "identifier": "America/Atikokan",
+      "supported": true
+    },
+    {
+      "identifier": "America/Bahia",
+      "supported": true
+    },
+    {
+      "identifier": "America/Bahia_Banderas",
+      "supported": true
+    },
+    {
+      "identifier": "America/Barbados",
+      "supported": true
+    },
+    {
+      "identifier": "America/Belem",
+      "supported": true
+    },
+    {
+      "identifier": "America/Belize",
+      "supported": true
+    },
+    {
+      "identifier": "America/Blanc-Sablon",
+      "supported": true
+    },
+    {
+      "identifier": "America/Boa_Vista",
+      "supported": true
+    },
+    {
+      "identifier": "America/Bogota",
+      "supported": true
+    },
+    {
+      "identifier": "America/Boise",
+      "supported": true
+    },
+    {
+      "identifier": "America/Cambridge_Bay",
+      "supported": true
+    },
+    {
+      "identifier": "America/Campo_Grande",
+      "supported": true
+    },
+    {
+      "identifier": "America/Cancun",
+      "supported": true
+    },
+    {
+      "identifier": "America/Caracas",
+      "supported": true
+    },
+    {
+      "identifier": "America/Cayenne",
+      "supported": true
+    },
+    {
+      "identifier": "America/Cayman",
+      "supported": true
+    },
+    {
+      "identifier": "America/Chicago",
+      "supported": true
+    },
+    {
+      "identifier": "America/Chihuahua",
+      "supported": true
+    },
+    {
+      "identifier": "America/Ciudad_Juarez",
+      "supported": true
+    },
+    {
+      "identifier": "America/Costa_Rica",
+      "supported": true
+    },
+    {
+      "identifier": "America/Coyhaique",
+      "supported": true
+    },
+    {
+      "identifier": "America/Creston",
+      "supported": true
+    },
+    {
+      "identifier": "America/Cuiaba",
+      "supported": true
+    },
+    {
+      "identifier": "America/Curacao",
+      "supported": true
+    },
+    {
+      "identifier": "America/Danmarkshavn",
+      "supported": true
+    },
+    {
+      "identifier": "America/Dawson",
+      "supported": true
+    },
+    {
+      "identifier": "America/Dawson_Creek",
+      "supported": true
+    },
+    {
+      "identifier": "America/Denver",
+      "supported": true
+    },
+    {
+      "identifier": "America/Detroit",
+      "supported": true
+    },
+    {
+      "identifier": "America/Dominica",
+      "supported": true
+    },
+    {
+      "identifier": "America/Edmonton",
+      "supported": true
+    },
+    {
+      "identifier": "America/Eirunepe",
+      "supported": true
+    },
+    {
+      "identifier": "America/El_Salvador",
+      "supported": true
+    },
+    {
+      "identifier": "America/Fort_Nelson",
+      "supported": true
+    },
+    {
+      "identifier": "America/Fortaleza",
+      "supported": true
+    },
+    {
+      "identifier": "America/Glace_Bay",
+      "supported": true
+    },
+    {
+      "identifier": "America/Goose_Bay",
+      "supported": true
+    },
+    {
+      "identifier": "America/Grand_Turk",
+      "supported": true
+    },
+    {
+      "identifier": "America/Grenada",
+      "supported": true
+    },
+    {
+      "identifier": "America/Guadeloupe",
+      "supported": true
+    },
+    {
+      "identifier": "America/Guatemala",
+      "supported": true
+    },
+    {
+      "identifier": "America/Guayaquil",
+      "supported": true
+    },
+    {
+      "identifier": "America/Guyana",
+      "supported": true
+    },
+    {
+      "identifier": "America/Halifax",
+      "supported": true
+    },
+    {
+      "identifier": "America/Havana",
+      "supported": true
+    },
+    {
+      "identifier": "America/Hermosillo",
+      "supported": true
+    },
+    {
+      "identifier": "America/Indiana/Indianapolis",
+      "supported": true
+    },
+    {
+      "identifier": "America/Indiana/Knox",
+      "supported": true
+    },
+    {
+      "identifier": "America/Indiana/Marengo",
+      "supported": true
+    },
+    {
+      "identifier": "America/Indiana/Petersburg",
+      "supported": true
+    },
+    {
+      "identifier": "America/Indiana/Tell_City",
+      "supported": true
+    },
+    {
+      "identifier": "America/Indiana/Vevay",
+      "supported": true
+    },
+    {
+      "identifier": "America/Indiana/Vincennes",
+      "supported": true
+    },
+    {
+      "identifier": "America/Indiana/Winamac",
+      "supported": true
+    },
+    {
+      "identifier": "America/Inuvik",
+      "supported": true
+    },
+    {
+      "identifier": "America/Iqaluit",
+      "supported": true
+    },
+    {
+      "identifier": "America/Jamaica",
+      "supported": true
+    },
+    {
+      "identifier": "America/Juneau",
+      "supported": true
+    },
+    {
+      "identifier": "America/Kentucky/Louisville",
+      "supported": true
+    },
+    {
+      "identifier": "America/Kentucky/Monticello",
+      "supported": true
+    },
+    {
+      "identifier": "America/Kralendijk",
+      "supported": true
+    },
+    {
+      "identifier": "America/La_Paz",
+      "supported": true
+    },
+    {
+      "identifier": "America/Lima",
+      "supported": true
+    },
+    {
+      "identifier": "America/Los_Angeles",
+      "supported": true
+    },
+    {
+      "identifier": "America/Lower_Princes",
+      "supported": true
+    },
+    {
+      "identifier": "America/Maceio",
+      "supported": true
+    },
+    {
+      "identifier": "America/Managua",
+      "supported": true
+    },
+    {
+      "identifier": "America/Manaus",
+      "supported": true
+    },
+    {
+      "identifier": "America/Marigot",
+      "supported": true
+    },
+    {
+      "identifier": "America/Martinique",
+      "supported": true
+    },
+    {
+      "identifier": "America/Matamoros",
+      "supported": true
+    },
+    {
+      "identifier": "America/Mazatlan",
+      "supported": true
+    },
+    {
+      "identifier": "America/Menominee",
+      "supported": true
+    },
+    {
+      "identifier": "America/Merida",
+      "supported": true
+    },
+    {
+      "identifier": "America/Metlakatla",
+      "supported": true
+    },
+    {
+      "identifier": "America/Mexico_City",
+      "supported": true
+    },
+    {
+      "identifier": "America/Miquelon",
+      "supported": true
+    },
+    {
+      "identifier": "America/Moncton",
+      "supported": true
+    },
+    {
+      "identifier": "America/Monterrey",
+      "supported": true
+    },
+    {
+      "identifier": "America/Montevideo",
+      "supported": true
+    },
+    {
+      "identifier": "America/Montserrat",
+      "supported": true
+    },
+    {
+      "identifier": "America/Nassau",
+      "supported": true
+    },
+    {
+      "identifier": "America/New_York",
+      "supported": true
+    },
+    {
+      "identifier": "America/Nome",
+      "supported": true
+    },
+    {
+      "identifier": "America/Noronha",
+      "supported": true
+    },
+    {
+      "identifier": "America/North_Dakota/Beulah",
+      "supported": true
+    },
+    {
+      "identifier": "America/North_Dakota/Center",
+      "supported": true
+    },
+    {
+      "identifier": "America/North_Dakota/New_Salem",
+      "supported": true
+    },
+    {
+      "identifier": "America/Nuuk",
+      "supported": true
+    },
+    {
+      "identifier": "America/Ojinaga",
+      "supported": true
+    },
+    {
+      "identifier": "America/Panama",
+      "supported": true
+    },
+    {
+      "identifier": "America/Paramaribo",
+      "supported": true
+    },
+    {
+      "identifier": "America/Phoenix",
+      "supported": true
+    },
+    {
+      "identifier": "America/Port-au-Prince",
+      "supported": true
+    },
+    {
+      "identifier": "America/Port_of_Spain",
+      "supported": true
+    },
+    {
+      "identifier": "America/Porto_Velho",
+      "supported": true
+    },
+    {
+      "identifier": "America/Puerto_Rico",
+      "supported": true
+    },
+    {
+      "identifier": "America/Punta_Arenas",
+      "supported": true
+    },
+    {
+      "identifier": "America/Rankin_Inlet",
+      "supported": true
+    },
+    {
+      "identifier": "America/Recife",
+      "supported": true
+    },
+    {
+      "identifier": "America/Regina",
+      "supported": true
+    },
+    {
+      "identifier": "America/Resolute",
+      "supported": true
+    },
+    {
+      "identifier": "America/Rio_Branco",
+      "supported": true
+    },
+    {
+      "identifier": "America/Santarem",
+      "supported": true
+    },
+    {
+      "identifier": "America/Santiago",
+      "supported": true
+    },
+    {
+      "identifier": "America/Santo_Domingo",
+      "supported": true
+    },
+    {
+      "identifier": "America/Sao_Paulo",
+      "supported": true
+    },
+    {
+      "identifier": "America/Scoresbysund",
+      "supported": true
+    },
+    {
+      "identifier": "America/Sitka",
+      "supported": true
+    },
+    {
+      "identifier": "America/St_Barthelemy",
+      "supported": true
+    },
+    {
+      "identifier": "America/St_Johns",
+      "supported": true
+    },
+    {
+      "identifier": "America/St_Kitts",
+      "supported": true
+    },
+    {
+      "identifier": "America/St_Lucia",
+      "supported": true
+    },
+    {
+      "identifier": "America/St_Thomas",
+      "supported": true
+    },
+    {
+      "identifier": "America/St_Vincent",
+      "supported": true
+    },
+    {
+      "identifier": "America/Swift_Current",
+      "supported": true
+    },
+    {
+      "identifier": "America/Tegucigalpa",
+      "supported": true
+    },
+    {
+      "identifier": "America/Thule",
+      "supported": true
+    },
+    {
+      "identifier": "America/Tijuana",
+      "supported": true
+    },
+    {
+      "identifier": "America/Toronto",
+      "supported": true
+    },
+    {
+      "identifier": "America/Tortola",
+      "supported": true
+    },
+    {
+      "identifier": "America/Vancouver",
+      "supported": true
+    },
+    {
+      "identifier": "America/Whitehorse",
+      "supported": true
+    },
+    {
+      "identifier": "America/Winnipeg",
+      "supported": true
+    },
+    {
+      "identifier": "America/Yakutat",
+      "supported": true
+    },
+    {
+      "identifier": "Antarctica/Casey",
+      "supported": true
+    },
+    {
+      "identifier": "Antarctica/Davis",
+      "supported": true
+    },
+    {
+      "identifier": "Antarctica/DumontDUrville",
+      "supported": true
+    },
+    {
+      "identifier": "Antarctica/Macquarie",
+      "supported": true
+    },
+    {
+      "identifier": "Antarctica/Mawson",
+      "supported": true
+    },
+    {
+      "identifier": "Antarctica/McMurdo",
+      "supported": true
+    },
+    {
+      "identifier": "Antarctica/Palmer",
+      "supported": true
+    },
+    {
+      "identifier": "Antarctica/Rothera",
+      "supported": true
+    },
+    {
+      "identifier": "Antarctica/Syowa",
+      "supported": true
+    },
+    {
+      "identifier": "Antarctica/Troll",
+      "supported": true
+    },
+    {
+      "identifier": "Antarctica/Vostok",
+      "supported": true
+    },
+    {
+      "identifier": "Arctic/Longyearbyen",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Aden",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Almaty",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Amman",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Anadyr",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Aqtau",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Aqtobe",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Ashgabat",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Atyrau",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Baghdad",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Bahrain",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Baku",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Bangkok",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Barnaul",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Beirut",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Bishkek",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Brunei",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Chita",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Colombo",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Damascus",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Dhaka",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Dili",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Dubai",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Dushanbe",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Famagusta",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Gaza",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Hebron",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Ho_Chi_Minh",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Hong_Kong",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Hovd",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Irkutsk",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Jakarta",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Jayapura",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Jerusalem",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Kabul",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Kamchatka",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Karachi",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Kathmandu",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Khandyga",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Kolkata",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Krasnoyarsk",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Kuala_Lumpur",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Kuching",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Kuwait",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Macau",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Magadan",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Makassar",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Manila",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Muscat",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Nicosia",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Novokuznetsk",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Novosibirsk",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Omsk",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Oral",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Phnom_Penh",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Pontianak",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Pyongyang",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Qatar",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Qostanay",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Qyzylorda",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Riyadh",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Sakhalin",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Samarkand",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Seoul",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Shanghai",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Singapore",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Srednekolymsk",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Taipei",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Tashkent",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Tbilisi",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Tehran",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Thimphu",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Tokyo",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Tomsk",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Ulaanbaatar",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Urumqi",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Ust-Nera",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Vientiane",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Vladivostok",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Yakutsk",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Yangon",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Yekaterinburg",
+      "supported": true
+    },
+    {
+      "identifier": "Asia/Yerevan",
+      "supported": true
+    },
+    {
+      "identifier": "Atlantic/Azores",
+      "supported": true
+    },
+    {
+      "identifier": "Atlantic/Bermuda",
+      "supported": true
+    },
+    {
+      "identifier": "Atlantic/Canary",
+      "supported": true
+    },
+    {
+      "identifier": "Atlantic/Cape_Verde",
+      "supported": true
+    },
+    {
+      "identifier": "Atlantic/Faroe",
+      "supported": true
+    },
+    {
+      "identifier": "Atlantic/Madeira",
+      "supported": true
+    },
+    {
+      "identifier": "Atlantic/Reykjavik",
+      "supported": true
+    },
+    {
+      "identifier": "Atlantic/South_Georgia",
+      "supported": true
+    },
+    {
+      "identifier": "Atlantic/St_Helena",
+      "supported": true
+    },
+    {
+      "identifier": "Atlantic/Stanley",
+      "supported": true
+    },
+    {
+      "identifier": "Australia/Adelaide",
+      "supported": true
+    },
+    {
+      "identifier": "Australia/Brisbane",
+      "supported": true
+    },
+    {
+      "identifier": "Australia/Broken_Hill",
+      "supported": true
+    },
+    {
+      "identifier": "Australia/Darwin",
+      "supported": true
+    },
+    {
+      "identifier": "Australia/Eucla",
+      "supported": true
+    },
+    {
+      "identifier": "Australia/Hobart",
+      "supported": true
+    },
+    {
+      "identifier": "Australia/Lindeman",
+      "supported": true
+    },
+    {
+      "identifier": "Australia/Lord_Howe",
+      "supported": true
+    },
+    {
+      "identifier": "Australia/Melbourne",
+      "supported": true
+    },
+    {
+      "identifier": "Australia/Perth",
+      "supported": true
+    },
+    {
+      "identifier": "Australia/Sydney",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT+1",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT+10",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT+11",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT+12",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT+2",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT+3",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT+4",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT+5",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT+6",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT+7",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT+8",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT+9",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT-1",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT-10",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT-11",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT-12",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT-13",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT-14",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT-2",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT-3",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT-4",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT-5",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT-6",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT-7",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT-8",
+      "supported": true
+    },
+    {
+      "identifier": "Etc/GMT-9",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Amsterdam",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Andorra",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Astrakhan",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Athens",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Belgrade",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Berlin",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Bratislava",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Brussels",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Bucharest",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Budapest",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Busingen",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Chisinau",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Copenhagen",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Dublin",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Gibraltar",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Guernsey",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Helsinki",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Isle_of_Man",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Istanbul",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Jersey",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Kaliningrad",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Kirov",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Kyiv",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Lisbon",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Ljubljana",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/London",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Luxembourg",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Madrid",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Malta",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Mariehamn",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Minsk",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Monaco",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Moscow",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Oslo",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Paris",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Podgorica",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Prague",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Riga",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Rome",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Samara",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/San_Marino",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Sarajevo",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Saratov",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Simferopol",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Skopje",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Sofia",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Stockholm",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Tallinn",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Tirane",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Ulyanovsk",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Vaduz",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Vatican",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Vienna",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Vilnius",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Volgograd",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Warsaw",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Zagreb",
+      "supported": true
+    },
+    {
+      "identifier": "Europe/Zurich",
+      "supported": true
+    },
+    {
+      "identifier": "Factory",
+      "supported": true
+    },
+    {
+      "identifier": "Indian/Antananarivo",
+      "supported": true
+    },
+    {
+      "identifier": "Indian/Chagos",
+      "supported": true
+    },
+    {
+      "identifier": "Indian/Christmas",
+      "supported": true
+    },
+    {
+      "identifier": "Indian/Cocos",
+      "supported": true
+    },
+    {
+      "identifier": "Indian/Comoro",
+      "supported": true
+    },
+    {
+      "identifier": "Indian/Kerguelen",
+      "supported": true
+    },
+    {
+      "identifier": "Indian/Mahe",
+      "supported": true
+    },
+    {
+      "identifier": "Indian/Maldives",
+      "supported": true
+    },
+    {
+      "identifier": "Indian/Mauritius",
+      "supported": true
+    },
+    {
+      "identifier": "Indian/Mayotte",
+      "supported": true
+    },
+    {
+      "identifier": "Indian/Reunion",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Apia",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Auckland",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Bougainville",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Chatham",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Chuuk",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Easter",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Efate",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Fakaofo",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Fiji",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Funafuti",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Galapagos",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Gambier",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Guadalcanal",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Guam",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Honolulu",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Kanton",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Kiritimati",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Kosrae",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Kwajalein",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Majuro",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Marquesas",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Midway",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Nauru",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Niue",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Norfolk",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Noumea",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Pago_Pago",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Palau",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Pitcairn",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Pohnpei",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Port_Moresby",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Rarotonga",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Saipan",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Tahiti",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Tarawa",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Tongatapu",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Wake",
+      "supported": true
+    },
+    {
+      "identifier": "Pacific/Wallis",
+      "supported": true
+    },
+    {
+      "identifier": "UTC",
+      "supported": true
+    }
+  ]
+}

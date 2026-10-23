@@ -1,0 +1,28 @@
+{
+  "name": "@nelmad/calendar-feasibility-probe",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/probe.js",
+      "require": "./dist/probe.cjs"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "peerDependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "dependencies": {
+    "@internationalized/date": "3.12.2",
+    "react-aria-components": "1.18.0",
+    "@react-stately/flags": "3.2.1"
+  }
+}

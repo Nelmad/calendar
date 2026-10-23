@@ -1,0 +1,1068 @@
+/* Calendar stylesheet. Loaded explicitly in every containing CSS tree scope. */
+:where(.nc-theme) {
+    --nelmad-calendar-color-surface: #fff;
+    --nelmad-calendar-color-text: #21201f;
+    --nelmad-calendar-color-muted: #66625e;
+    --nelmad-calendar-color-border: #8b8680;
+    --nelmad-calendar-color-accent: #b52f21;
+    --nelmad-calendar-color-danger: #b21f24;
+    --nelmad-calendar-color-focus: #135fd1;
+    --nelmad-calendar-spacing-xs: 4px;
+    --nelmad-calendar-spacing-sm: 8px;
+    --nelmad-calendar-spacing-md: 16px;
+    --nelmad-calendar-spacing-lg: 24px;
+    --nelmad-calendar-density-day-min-height: 100px;
+    --nelmad-calendar-density-item-height: 24px;
+    --nelmad-calendar-density-gap: 4px;
+    --nelmad-calendar-radii-sm: 6px;
+    --nelmad-calendar-radii-md: 13px;
+    --nelmad-calendar-radii-lg: 24px;
+    --nelmad-calendar-shadows-overlay: 0 8px 24px rgb(0 0 0 / 18%);
+    --nelmad-calendar-motion-duration: 100ms;
+    --nelmad-calendar-motion-easing: ease-out;
+    --nelmad-calendar-components-item-background: #f2f0ec;
+    --nelmad-calendar-components-item-text: #21201f;
+    --nelmad-calendar-components-selected-day-background: #fde5df;
+
+    color-scheme: light;
+    background-color: var(--nelmad-calendar-color-surface);
+    color: var(--nelmad-calendar-color-text);
+    font-family: var(--nelmad-calendar-typography-font-family, inherit);
+    font-size: var(--nelmad-calendar-typography-font-size, inherit);
+    font-weight: var(--nelmad-calendar-typography-font-weight, inherit);
+    line-height: var(--nelmad-calendar-typography-line-height, inherit);
+    text-align: start;
+}
+
+/* Class specificity: a host element reset such as `button { all: unset }` or a later `* { box-sizing: content-box }`
+   does not change the box model of package-owned UI (§10.3.4, QA-22). */
+.nc-theme,
+.nc-theme * {
+    box-sizing: border-box;
+}
+
+:where(.nc-theme) .nc-visually-hidden {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+.nc-theme.nc-calendar {
+    position: relative;
+
+    /* Stacking inside the calendar (refresh progress, focus ring, sticky weekdays) never competes with host layers. */
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    inline-size: 100%;
+    min-inline-size: 0;
+    padding: var(--nelmad-calendar-spacing-md);
+
+    /* Private sizes shared by the Month and by the reserve of a blocking status (QA-D-3). Custom properties resolve where
+       they are used, so `lh` and `em` take the calendar's own font and line height there: the weekday row (two paddings
+       and one line of 0.8125em text), a compact mobile week, and the inline agenda of a date without items (borders,
+       paddings, heading, count line with its 8 px margins, empty line with its 1em paragraph margins). */
+    --nc-weekday-row-size: calc(2 * var(--nelmad-calendar-spacing-sm) + 0.8125lh);
+    --nc-mobile-week-size: 52px;
+    --nc-inline-agenda-size: calc(2px + 2 * var(--nelmad-calendar-spacing-sm) + 2lh + 0.875lh + 8px + max(8px, 1em) + 1em);
+}
+
+:where(.nc-theme) .nc-calendar-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--nelmad-calendar-spacing-sm);
+    margin-block-end: var(--nelmad-calendar-spacing-md);
+    flex: 0 0 auto;
+}
+
+/* renderToolbarContent (§10.4): an extension area after the package controls; it never replaces them. */
+:where(.nc-theme) .nc-toolbar-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--nelmad-calendar-spacing-sm);
+    min-inline-size: 0;
+}
+
+/* Package-owned headings and paragraphs set their own type and spacing (review 2026-10-09-3): host element rules such as
+   `h2 { color: var(--text-h); font-weight: 500 }` or a preflight reset (`h1, h2, h3 { font-weight: inherit }`, `* { margin: 0 }`)
+   have element specificity and never restyle them, so the month title keeps the calendar's color in every colorScheme. */
+:where(.nc-theme) .nc-calendar-heading,
+:where(.nc-theme) .nc-day-list-heading h3 {
+    padding: 0;
+    border: 0;
+    color: inherit;
+    font-family: inherit;
+    font-style: inherit;
+    font-weight: 700;
+    letter-spacing: inherit;
+    line-height: inherit;
+    text-transform: inherit;
+}
+
+:where(.nc-theme) .nc-calendar-heading {
+    margin: 0;
+    margin-inline-end: auto;
+    font-size: 1.25em;
+}
+
+:where(.nc-theme) .nc-calendar-status {
+    padding: var(--nelmad-calendar-spacing-md);
+    border: 1px solid var(--nelmad-calendar-color-border);
+    border-radius: var(--nelmad-calendar-radii-md);
+    flex: 0 0 auto;
+}
+
+/* QA-07: a blocking status keeps the height of the grid it replaces, so the page below does not jump when loading starts
+   or ends. QA-D-1-05: the measured height of the view it replaced (`--nc-reserved-block-size`, written by the calendar)
+   when there is one; otherwise (server, first mount) the same sizes the Month uses (QA-D-3): its weeks at the preferred
+   row size, the weekday row and the grid border (and, in mobile, the gap and an inline agenda of a date without items). */
+:where(.nc-theme) .nc-calendar-status[data-weeks="4"] { --nc-week-count: 4; }
+:where(.nc-theme) .nc-calendar-status[data-weeks="5"] { --nc-week-count: 5; }
+:where(.nc-theme) .nc-calendar-status[data-weeks="6"] { --nc-week-count: 6; }
+
+:where(.nc-theme) .nc-calendar-status[data-weeks] {
+    flex: 1 1 var(--nc-reserved-block-size, calc(var(--nc-week-count) * var(--nelmad-calendar-density-day-min-height) + var(--nc-weekday-row-size) + 2px));
+}
+
+:where(.nc-theme[data-layout="mobile"]) .nc-calendar-status[data-weeks] {
+    flex-basis: var(--nc-reserved-block-size, calc(var(--nc-week-count) * var(--nc-mobile-week-size) + var(--nc-weekday-row-size) + 2px
+        + var(--nelmad-calendar-spacing-sm) + var(--nc-inline-agenda-size)));
+}
+
+/* QA-D-3 (lead decision): a data state never moves the toolbar controls. A refresh error, and a custom refresh body from
+   `renderLoading`, is an actionable banner in the flow between the toolbar and the grid: it shifts the grid once, and
+   covers no weekday name, date cell or control. */
+:where(.nc-theme) .nc-calendar-status[data-placement="banner"] {
+    margin-block-end: var(--nelmad-calendar-spacing-sm);
+    padding: var(--nelmad-calendar-spacing-xs) var(--nelmad-calendar-spacing-sm);
+}
+
+/* A refresh in progress has no layout effect: a 3 px bar over the top border of the grid area (its bottom edge is the
+   grid's top border, above the weekday row), on the straight part of that border. It covers no text, cell or control and
+   takes no pointer input; its region holds no consumer content (a custom body is a banner). */
+:where(.nc-theme) .nc-calendar-status[data-placement="progress"] {
+    position: absolute;
+    z-index: 1;
+    inset-block-start: -2px;
+    inset-inline: var(--nelmad-calendar-radii-md);
+    block-size: 3px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    pointer-events: none;
+}
+
+:where(.nc-theme) .nc-calendar-progress {
+    position: relative;
+    block-size: 100%;
+    overflow: hidden;
+    background-color: color-mix(in srgb, var(--nelmad-calendar-color-accent) 25%, var(--nelmad-calendar-color-surface));
+}
+
+/* Indeterminate: a segment crosses the track by transform only, so it never counts as a layout shift. */
+:where(.nc-theme) .nc-calendar-progress-indicator {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    inline-size: 40%;
+    background-color: var(--nelmad-calendar-color-accent);
+    animation: nc-progress-slide 1.4s ease-in-out infinite;
+}
+
+:where(.nc-theme[dir="rtl"]) .nc-calendar-progress-indicator {
+    animation-direction: reverse;
+}
+
+@keyframes nc-progress-slide {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(250%); }
+}
+
+:where(.nc-theme) .nc-calendar-view {
+    /* The containing block of the refresh progress bar. */
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-block-size: 0;
+    min-inline-size: 0;
+    gap: var(--nelmad-calendar-spacing-sm);
+}
+
+:where(.nc-theme) .nc-month {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-block-size: 0;
+    overflow: auto;
+
+    /* QA-D-1-03: scrolling a focused cell into view stops below the sticky weekday row (its measured block size, plus
+       1 px for a scroll offset snapped to device pixels). */
+    scroll-padding-block-start: calc(var(--nc-weekdays-block-size, 0px) + 1px);
+    border: 1px solid var(--nelmad-calendar-color-border);
+    border-radius: var(--nelmad-calendar-radii-md);
+}
+
+:where(.nc-theme) .nc-month-weekdays,
+:where(.nc-theme) .nc-month-week {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+/* QA-19: the weekday row stays visible while a constrained grid scrolls; it covers rows, items and the focus ring. */
+:where(.nc-theme) .nc-month-weekdays {
+    flex: 0 0 auto;
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 3;
+    background-color: var(--nelmad-calendar-color-surface);
+}
+
+/* QA-19: a desktop grid keeps readable columns and scrolls inside the grid region (§12.5), never the page. A forced
+   desktop reaches it in any container narrower than 448 px; an `auto` desktop only with a `mobileBreakpoint` below
+   448 px (the default 640 px switches to mobile first) (QA-D-1-08). */
+:where(.nc-theme[data-layout="desktop"]) .nc-month-weekdays,
+:where(.nc-theme[data-layout="desktop"]) .nc-month-weeks {
+    min-inline-size: calc(7 * 64px);
+}
+
+:where(.nc-theme) .nc-weekday {
+    position: relative;
+    padding: var(--nelmad-calendar-spacing-sm) 2px;
+    overflow: hidden;
+    font-size: 0.8125em;
+    color: var(--nelmad-calendar-color-muted);
+    text-align: center;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* §12.5 (review 2026-10-09-3): a short label that does not fit its column switches the row to the narrow format; the short
+   label stays laid out (hidden) for the next fit check, see useWeekdayFit. */
+:where(.nc-theme) .nc-weekday-label { display: inline-block; }
+
+:where(.nc-theme) .nc-month-weekdays[data-narrow-weekdays] .nc-weekday-label {
+    position: absolute;
+    visibility: hidden;
+}
+
+:where(.nc-theme) .nc-month-weekdays[data-narrow-weekdays] .nc-weekday::after { content: attr(data-narrow-label); }
+
+:where(.nc-theme) .nc-month-weeks {
+    display: grid;
+    flex: 1 1 calc(var(--nc-week-count) * max(var(--nelmad-calendar-density-day-min-height), var(--nc-minimum-row)));
+    grid-template-rows: repeat(var(--nc-week-count), minmax(0, 1fr));
+    min-block-size: calc(var(--nc-week-count) * var(--nc-minimum-row));
+}
+
+:where(.nc-theme[data-layout="mobile"]) .nc-month-weeks {
+    flex-basis: calc(var(--nc-week-count) * var(--nc-mobile-week-size));
+    min-block-size: calc(var(--nc-week-count) * 44px);
+}
+
+/* A constrained mobile grid keeps a usable viewport: its sticky weekday row, one 44 px week and its border (QA-D-4-01). */
+:where(.nc-theme[data-layout="mobile"]) .nc-month {
+    min-block-size: calc(var(--nc-weekdays-block-size, var(--nc-weekday-row-size)) + 44px + 2px);
+}
+
+:where(.nc-theme) .nc-month-week {
+    position: relative;
+    min-block-size: 0;
+    border-block-start: 1px solid var(--nelmad-calendar-color-border);
+}
+
+:where(.nc-theme) .nc-day {
+    position: relative;
+    min-inline-size: 0;
+    border-inline-end: 1px solid var(--nelmad-calendar-color-border);
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+:where(.nc-theme) .nc-day[aria-colindex="7"] { border-inline-end: 0; }
+
+/* §10.3.3: the selected-day token colors selected date cells only, never items or controls (QA-15). */
+:where(.nc-theme) .nc-day[data-selected] { background-color: var(--nelmad-calendar-components-selected-day-background); }
+
+:where(.nc-theme) .nc-day:focus-visible { outline: none; }
+
+/* QA-06: the focus ring is drawn above the items of its cell without lifting the cell itself, so a press on a chip
+   or bar of a focused cell still reaches that item. */
+:where(.nc-theme) .nc-day:focus-visible::after {
+    position: absolute;
+    z-index: 2;
+    inset: 1px;
+    border: 2px solid var(--nelmad-calendar-color-focus);
+    content: "";
+    pointer-events: none;
+}
+
+:where(.nc-theme) .nc-day-header {
+    display: flex;
+    align-items: center;
+    min-block-size: 32px;
+    padding-inline: var(--nelmad-calendar-spacing-sm);
+    overflow: hidden;
+}
+
+/* Custom header content (renderDayHeader) is clipped to the header, like the default day number. */
+:where(.nc-theme) .nc-day-header > .nc-slot {
+    min-inline-size: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+:where(.nc-theme) .nc-day[data-outside-month] .nc-day-header { color: var(--nelmad-calendar-color-muted); }
+
+:where(.nc-theme) .nc-day[data-today] .nc-day-header {
+    color: var(--nelmad-calendar-color-accent);
+    font-weight: 700;
+}
+
+:where(.nc-theme) .nc-day[data-agenda-date] .nc-day-header {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+:where(.nc-theme) .nc-month-probes {
+    position: absolute;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+:where(.nc-theme) .nc-month-item-probe,
+:where(.nc-theme) .nc-month-item {
+    block-size: var(--nelmad-calendar-density-item-height);
+    min-block-size: calc(1lh + 4px);
+    font-size: 0.8125em;
+    line-height: 1.4;
+}
+
+:where(.nc-theme) .nc-month-item-probe { margin-block-end: var(--nelmad-calendar-density-gap); }
+
+:where(.nc-theme) .nc-month-overflow-probe,
+:where(.nc-theme) .nc-overflow {
+    min-inline-size: 24px;
+    block-size: max(24px, calc(1lh + 4px));
+}
+
+:where(.nc-theme) .nc-overflow {
+    position: absolute;
+    inset-inline: 2px;
+    inset-block-end: var(--nelmad-calendar-density-gap);
+    padding-inline: 6px;
+    overflow: hidden;
+    text-align: start;
+
+    /* A count wider than a narrow column is visibly truncated, never cut mid-digit (§6.3, review 2026-10-09-3). */
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    line-height: max(24px, calc(1lh + 4px));
+    color: var(--nelmad-calendar-color-accent);
+}
+
+:where(.nc-theme) .nc-month-segments {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+:where(.nc-theme) .nc-month-item {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding-inline: 6px;
+    overflow: hidden;
+    border-inline: 2px solid var(--nelmad-calendar-color-surface);
+    border-radius: var(--nelmad-calendar-radii-sm);
+    background-color: var(--nelmad-calendar-components-item-background);
+    color: var(--nelmad-calendar-components-item-text);
+    white-space: nowrap;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+:where(.nc-theme) .nc-month-item[data-continues-before] {
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+}
+
+:where(.nc-theme) .nc-month-item[data-continues-after] {
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+}
+
+:where(.nc-theme) .nc-month-chip {
+    container-type: inline-size;
+}
+
+/* QA-19: the title keeps a few characters and an ellipsis; the time gives way first: it shrinks with an ellipsis and
+   disappears in a chip too narrow for both. */
+:where(.nc-theme) .nc-month-item > bdi,
+:where(.nc-theme) .nc-month-item > .nc-item-content {
+    flex: 1 1 0;
+    min-inline-size: min(100%, 2.5em);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* §10.3.3 accent marker: a package-owned bar at the inline start of every segment and agenda row. Its layers are nested
+   color declarations (theme accent here, then source and item resolver inline); the bar is the inner span's border in
+   currentcolor. */
+:where(.nc-theme) .nc-item-accent {
+    display: flex;
+    flex: none;
+    align-self: stretch;
+    color: var(--nelmad-calendar-color-accent);
+}
+
+:where(.nc-theme) .nc-item-accent > span {
+    border-inline-start: 3px solid;
+    border-radius: 2px;
+}
+
+:where(.nc-theme) .nc-month-item > .nc-item-accent {
+    margin-block: 3px;
+    margin-inline-start: -2px;
+}
+
+:where(.nc-theme) .nc-item-time {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+}
+
+@container (inline-size < 7em) {
+    :where(.nc-theme) .nc-month-chip .nc-item-time { display: none; }
+}
+
+:where(.nc-theme) .nc-day-indicator {
+    display: block;
+    inline-size: 5px;
+    block-size: 5px;
+    margin-inline: auto;
+    border-radius: 50%;
+    background-color: var(--nelmad-calendar-color-accent);
+}
+
+:where(.nc-theme) .nc-day-list {
+    flex: 0 1 auto;
+    min-block-size: 80px;
+    padding: var(--nelmad-calendar-spacing-sm);
+    border: 1px solid var(--nelmad-calendar-color-border);
+    border-radius: var(--nelmad-calendar-radii-md);
+}
+
+:where(.nc-theme) .nc-day-list-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+:where(.nc-theme) .nc-day-list-heading h3 {
+    flex: 1;
+    margin: 0;
+    font-size: 1em;
+}
+:where(.nc-theme) .nc-day-list-heading h3:focus-visible { outline: 2px solid var(--nelmad-calendar-color-focus); }
+
+:where(.nc-theme) .nc-day-list-count {
+    margin-inline: 0;
+    margin-block: 8px;
+    color: var(--nelmad-calendar-color-muted);
+    font-size: 0.875em;
+}
+
+/* An intrinsic inline agenda is never shorter than one of a date without items, whatever the host's paragraph margins:
+   the reserve of a blocking status is exactly that size (QA-D-3). The size is a zero-width float in its own formatting
+   context, so it raises the agenda's content size (its flex basis) but sets no minimum: in a root of fixed height the
+   agenda still shrinks to its 80 px minimum before the grid (QA-D-4-01). */
+:where(.nc-theme) .nc-day-list[data-presentation="inline"] {
+    display: flow-root;
+
+    /* A root of definite height (review 2026-10-09-1): the shrunk agenda scrolls its rows inside the root instead of
+       painting them over the page below (§6.3). An intrinsic root never shrinks it, so nothing scrolls there. */
+    overflow: auto;
+}
+
+:where(.nc-theme) .nc-day-list[data-presentation="inline"]::before {
+    content: "";
+    float: inline-start;
+    inline-size: 0;
+    block-size: calc(var(--nc-inline-agenda-size) - 2px - 2 * var(--nelmad-calendar-spacing-sm));
+}
+
+/* The 1em block margins of the empty line are part of the reserved inline agenda size (--nc-inline-agenda-size). */
+:where(.nc-theme) .nc-day-list-empty { margin: 1em 0; }
+
+:where(.nc-theme) .nc-day-list ul {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+:where(.nc-theme) .nc-agenda-item { padding-block: 4px; }
+
+:where(.nc-theme) .nc-agenda-title {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+:where(.nc-theme) .nc-agenda-details {
+    display: block;
+    color: var(--nelmad-calendar-color-muted);
+    font-size: 0.8125em;
+}
+
+:where(.nc-theme) .nc-calendar-status:focus-visible {
+    outline: 2px solid var(--nelmad-calendar-color-focus);
+    outline-offset: 2px;
+}
+
+:where(.nc-theme[data-density="comfortable"]) {
+    /* QA-18: two comfortable lanes (header, gaps and the row border included) fit, as two compact ones do. */
+    --nelmad-calendar-density-day-min-height: 128px;
+    --nelmad-calendar-density-item-height: 32px;
+    --nelmad-calendar-density-gap: 8px;
+}
+
+:where(.nc-theme[data-color-scheme="dark"]) {
+    --nelmad-calendar-color-surface: #22201f;
+    --nelmad-calendar-color-text: #faf7f3;
+    --nelmad-calendar-color-muted: #c9c1b8;
+    --nelmad-calendar-color-border: #aaa198;
+    --nelmad-calendar-color-accent: #ff9b88;
+    --nelmad-calendar-color-danger: #ff969b;
+    --nelmad-calendar-color-focus: #a9c7ff;
+    --nelmad-calendar-components-item-background: #38332f;
+    --nelmad-calendar-components-item-text: #faf7f3;
+    --nelmad-calendar-components-selected-day-background: #59362f;
+
+    color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    :where(.nc-theme[data-color-scheme="system"]) {
+        --nelmad-calendar-color-surface: #22201f;
+        --nelmad-calendar-color-text: #faf7f3;
+        --nelmad-calendar-color-muted: #c9c1b8;
+        --nelmad-calendar-color-border: #aaa198;
+        --nelmad-calendar-color-accent: #ff9b88;
+        --nelmad-calendar-color-danger: #ff969b;
+        --nelmad-calendar-color-focus: #a9c7ff;
+        --nelmad-calendar-components-item-background: #38332f;
+        --nelmad-calendar-components-item-text: #faf7f3;
+        --nelmad-calendar-components-selected-day-background: #59362f;
+
+        color-scheme: dark;
+    }
+}
+
+/* neutralTheme (§10.2): a restrained gray-blue palette with smaller radii and a lighter overlay shadow. It sets the same
+   variables as classic, never density ones, so it combines with either density; light, dark and system work for both
+   themes. All preset rules have zero specificity: a consumer's scoped CSS, `tokens` and root `style` override them. */
+:where(.nc-theme[data-theme="neutral"]) {
+    --nelmad-calendar-color-surface: #fff;
+    --nelmad-calendar-color-text: #1b1f24;
+    --nelmad-calendar-color-muted: #545d68;
+    --nelmad-calendar-color-border: #818b98;
+    --nelmad-calendar-color-accent: #0a5bc4;
+    --nelmad-calendar-color-danger: #b4232c;
+    --nelmad-calendar-color-focus: #7139c9;
+    --nelmad-calendar-radii-sm: 4px;
+    --nelmad-calendar-radii-md: 6px;
+    --nelmad-calendar-radii-lg: 10px;
+    --nelmad-calendar-shadows-overlay: 0 4px 16px rgb(15 23 42 / 16%);
+    --nelmad-calendar-motion-duration: 150ms;
+    --nelmad-calendar-motion-easing: cubic-bezier(0.2, 0, 0, 1);
+    --nelmad-calendar-components-item-background: #eef1f5;
+    --nelmad-calendar-components-item-text: #1b1f24;
+    --nelmad-calendar-components-selected-day-background: #dce9fa;
+
+    color-scheme: light;
+}
+
+:where(.nc-theme[data-theme="neutral"][data-color-scheme="dark"]) {
+    --nelmad-calendar-color-surface: #15181c;
+    --nelmad-calendar-color-text: #eef1f5;
+    --nelmad-calendar-color-muted: #aab3be;
+    --nelmad-calendar-color-border: #7d8792;
+    --nelmad-calendar-color-accent: #6cb2ff;
+    --nelmad-calendar-color-danger: #ff8f8f;
+    --nelmad-calendar-color-focus: #c6a6ff;
+    --nelmad-calendar-shadows-overlay: 0 4px 16px rgb(0 0 0 / 40%);
+    --nelmad-calendar-components-item-background: #262b31;
+    --nelmad-calendar-components-item-text: #eef1f5;
+    --nelmad-calendar-components-selected-day-background: #1d3553;
+
+    color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    :where(.nc-theme[data-theme="neutral"][data-color-scheme="system"]) {
+        --nelmad-calendar-color-surface: #15181c;
+        --nelmad-calendar-color-text: #eef1f5;
+        --nelmad-calendar-color-muted: #aab3be;
+        --nelmad-calendar-color-border: #7d8792;
+        --nelmad-calendar-color-accent: #6cb2ff;
+        --nelmad-calendar-color-danger: #ff8f8f;
+        --nelmad-calendar-color-focus: #c6a6ff;
+        --nelmad-calendar-shadows-overlay: 0 4px 16px rgb(0 0 0 / 40%);
+        --nelmad-calendar-components-item-background: #262b31;
+        --nelmad-calendar-components-item-text: #eef1f5;
+        --nelmad-calendar-components-selected-day-background: #1d3553;
+
+        color-scheme: dark;
+    }
+}
+
+:where(.nc-theme) .nc-button {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nelmad-calendar-spacing-sm);
+    min-block-size: 44px;
+    padding: var(--nelmad-calendar-spacing-sm) var(--nelmad-calendar-spacing-md);
+    border: 1px solid var(--nelmad-calendar-color-border);
+    border-radius: var(--nelmad-calendar-radii-md);
+
+    /* Controls derive their fill from the surface and text colors; item tokens belong to items only (QA-15). */
+    background-color: color-mix(in srgb, var(--nelmad-calendar-color-text) 6%, var(--nelmad-calendar-color-surface));
+    color: var(--nelmad-calendar-color-text);
+    font: inherit;
+    text-align: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    appearance: none;
+    transition: background-color var(--nelmad-calendar-motion-duration) var(--nelmad-calendar-motion-easing);
+}
+
+:where(.nc-theme) .nc-agenda-item > .nc-button {
+    align-items: stretch;
+    justify-content: flex-start;
+    inline-size: 100%;
+    text-align: start;
+}
+
+/* The row content after its accent marker: the default title and details, or the custom slot content (§10.4). */
+:where(.nc-theme) .nc-agenda-content {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: flex-start;
+    min-inline-size: 0;
+}
+
+/* A child-overlay trigger sits beside the primary surface; a row without one keeps its layout. */
+:where(.nc-theme) .nc-agenda-item:has(> [data-agenda-control="actions"]) {
+    display: flex;
+    gap: var(--nelmad-calendar-spacing-xs);
+    align-items: flex-start;
+}
+
+:where(.nc-theme) .nc-agenda-item:has(> [data-agenda-control="actions"]) > [data-agenda-control="primary"] {
+    flex: 1 1 0;
+    min-inline-size: 0;
+}
+
+:where(.nc-theme) .nc-agenda-item > .nc-icon-button[data-agenda-control="actions"] {
+    flex: none;
+    align-items: center;
+    inline-size: auto;
+}
+
+:where(.nc-theme) .nc-button[data-hovered],
+:where(.nc-theme) .nc-menu-item[data-focused] {
+    background-color: color-mix(in srgb, var(--nelmad-calendar-color-text) 12%, var(--nelmad-calendar-color-surface));
+}
+
+:where(.nc-theme) .nc-button[data-pressed] {
+    background-color: color-mix(in srgb, var(--nelmad-calendar-color-text) 18%, var(--nelmad-calendar-color-surface));
+}
+
+/* An agenda row is an item (§10.3.3): item background and text, pressable or not. */
+:where(.nc-theme) .nc-agenda-item > .nc-button[data-agenda-control="primary"],
+:where(.nc-theme) .nc-agenda-item:not(:has(> [data-agenda-control="primary"])) {
+    background-color: var(--nelmad-calendar-components-item-background);
+    color: var(--nelmad-calendar-components-item-text);
+}
+
+:where(.nc-theme) .nc-agenda-item:not(:has(> [data-agenda-control="primary"])) {
+    display: flex;
+    gap: var(--nelmad-calendar-spacing-sm);
+    padding: var(--nelmad-calendar-spacing-sm) var(--nelmad-calendar-spacing-md);
+    border-radius: var(--nelmad-calendar-radii-md);
+}
+
+/* Hover and press tint the item's own colors (currentcolor over its background), so a resolved item background from
+   `getItemAppearance` keeps the feedback (§10.3.3). */
+:where(.nc-theme) .nc-agenda-item > .nc-button[data-agenda-control="primary"][data-hovered] {
+    background-image: linear-gradient(color-mix(in srgb, currentcolor 8%, transparent), color-mix(in srgb, currentcolor 8%, transparent));
+}
+
+:where(.nc-theme) .nc-agenda-item > .nc-button[data-agenda-control="primary"][data-pressed] {
+    background-image: linear-gradient(color-mix(in srgb, currentcolor 14%, transparent), color-mix(in srgb, currentcolor 14%, transparent));
+}
+
+/* Secondary item text follows the item text color, so a custom item background keeps its contrast. */
+:where(.nc-theme) .nc-agenda-item .nc-agenda-details {
+    color: color-mix(in srgb, currentcolor 80%, transparent);
+}
+
+:where(.nc-theme) .nc-button[data-tone="danger"],
+:where(.nc-theme) .nc-menu-item[data-tone="danger"] {
+    color: var(--nelmad-calendar-color-danger);
+}
+
+:where(.nc-theme) .nc-button[data-disabled],
+:where(.nc-theme) .nc-checkbox[data-disabled],
+:where(.nc-theme) .nc-menu-item[data-disabled] {
+    opacity: 0.55;
+    cursor: default;
+}
+
+:where(.nc-theme) .nc-icon-button {
+    min-inline-size: 44px;
+    padding-inline: var(--nelmad-calendar-spacing-sm);
+}
+
+:where(.nc-theme) .nc-icon-content {
+    display: inline-flex;
+}
+
+:where(.nc-theme) .nc-icon {
+    flex: 0 0 auto;
+}
+
+:where(.nc-theme) .nc-icon[data-directional="true"]:dir(rtl) {
+    transform: scaleX(-1);
+}
+
+:where(.nc-theme) .nc-checkbox {
+    display: flex;
+    align-items: center;
+    gap: var(--nelmad-calendar-spacing-sm);
+    min-block-size: 44px;
+    border-radius: var(--nelmad-calendar-radii-sm);
+    cursor: pointer;
+}
+
+:where(.nc-theme) .nc-checkbox-mark {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    inline-size: 24px;
+    block-size: 24px;
+    border: 2px solid currentcolor;
+    border-radius: 4px;
+    color: var(--nelmad-calendar-color-accent);
+    font-weight: bold;
+    line-height: 1;
+}
+
+.nc-theme.nc-popover,
+:where(.nc-theme) .nc-modal {
+    max-inline-size: min(30em, calc(100vw - 32px));
+    overflow: auto;
+    border: 1px solid var(--nelmad-calendar-color-border);
+    border-radius: var(--nelmad-calendar-radii-lg);
+    background-color: var(--nelmad-calendar-color-surface);
+    box-shadow: var(--nelmad-calendar-shadows-overlay);
+}
+
+.nc-theme.nc-popover {
+    /* RAC writes the available height on the parent positioner. */
+    max-block-size: inherit;
+    padding: var(--nelmad-calendar-spacing-sm);
+
+    /* The end of a long agenda does not scroll the page under it (QA-02). */
+    overscroll-behavior: contain;
+}
+
+/* Package overlays share one stacking level (z-index 100000, as React Aria positioners): a later overlay, such as a
+   child menu of the agenda, stacks above an earlier one by document order. The level keeps host fixed layers below
+   (QA-11); a host stacking context around `portalContainer` contains it. A host dialog layer opened above a modal
+   sheet lowers the sheet (`data-yielded`, QA-10). Pointer events stay on under a host `pointer-events: none`. */
+.nc-positioned-popover {
+    pointer-events: auto;
+}
+
+.nc-theme.nc-menu-popover {
+    padding: var(--nelmad-calendar-spacing-xs);
+}
+
+:where(.nc-theme) .nc-child-overlay:focus { outline: none; }
+
+.nc-theme.nc-agenda-popover {
+    inline-size: 24em;
+}
+
+:where(.nc-theme) .nc-day-list[data-presentation="popover"] {
+    min-block-size: 0;
+    max-block-size: none;
+    border: 0;
+}
+
+.nc-theme.nc-backdrop {
+    position: fixed;
+    z-index: 100000;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgb(0 0 0 / 40%);
+    pointer-events: auto;
+}
+
+.nc-theme.nc-backdrop[data-yielded] {
+    z-index: auto;
+}
+
+/* A sheet whose owner a Suspense fallback hid has no modal effects: it is not shown until they reappear. */
+.nc-theme.nc-backdrop[hidden] {
+    display: none;
+}
+
+:where(.nc-theme) .nc-modal {
+    max-block-size: calc(100dvh - 32px);
+    padding: var(--nelmad-calendar-spacing-lg);
+}
+
+:where(.nc-theme) .nc-dialog {
+    padding: var(--nelmad-calendar-spacing-sm);
+}
+
+/* Mobile agenda sheet: a bottom-anchored modal; the backdrop keeps a visible strip above it. */
+.nc-theme.nc-sheet-backdrop {
+    align-items: flex-end;
+    padding: var(--nelmad-calendar-spacing-lg) 0 0;
+}
+
+:where(.nc-theme) .nc-sheet {
+    display: flex;
+    flex-direction: column;
+    inline-size: 100%;
+    max-inline-size: none;
+    max-block-size: 85dvh;
+    padding: var(--nelmad-calendar-spacing-md);
+    padding-block-end: calc(var(--nelmad-calendar-spacing-md) + env(safe-area-inset-bottom, 0px));
+    overscroll-behavior: contain;
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+}
+
+/* The heading, close control and count stay in place; only the list of the day scrolls (QA-21). Item action and source
+   sheets share the layout without the agenda's `data-presentation`, which belongs to DayAgenda only (§5.7, R60). */
+:where(.nc-theme) .nc-day-list[data-presentation="sheet"],
+:where(.nc-theme) .nc-day-list.nc-action-sheet {
+    display: flex;
+    flex-direction: column;
+    min-block-size: 0;
+    max-block-size: none;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+}
+
+:where(.nc-theme) .nc-day-list[data-presentation="sheet"] > ul {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    margin-inline: calc(-1 * var(--nelmad-calendar-spacing-xs));
+    padding: var(--nelmad-calendar-spacing-xs);
+    overflow: auto;
+    overscroll-behavior: contain;
+}
+
+/* Item action and source sheets (§12.2): a visible heading with close, then one named control per action or source;
+   only the list scrolls. The scroll container keeps 4px around its controls, the extent of their 2px focus ring with its
+   2px offset, so the ring is never clipped (§12.5, review 2026-10-09-2); negative margins keep the controls in place. */
+:where(.nc-theme) .nc-action-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nelmad-calendar-spacing-xs);
+    min-block-size: 0;
+    margin: calc(var(--nelmad-calendar-spacing-sm) - 4px) -4px -4px;
+    padding: 4px;
+    overflow: auto;
+    overscroll-behavior: contain;
+}
+
+:where(.nc-theme) .nc-action-list > .nc-button {
+    justify-content: flex-start;
+    inline-size: 100%;
+    text-align: start;
+}
+
+:where(.nc-theme) .nc-action-list > .nc-checkbox {
+    padding-inline: var(--nelmad-calendar-spacing-sm);
+}
+
+/* The checked state of a source menu item; its accessible state is `aria-checked`. */
+:where(.nc-theme) .nc-menu-check {
+    display: inline-flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    inline-size: 1.25em;
+    margin-inline-end: var(--nelmad-calendar-spacing-sm);
+    color: var(--nelmad-calendar-color-accent);
+}
+
+/* A known source's color marks the source itself in the selector (§10.3.3): a dot in currentcolor over the theme accent. */
+:where(.nc-theme) .nc-source-accent {
+    display: inline-block;
+    flex: none;
+    inline-size: 0.75em;
+    block-size: 0.75em;
+    margin-inline-end: var(--nelmad-calendar-spacing-sm);
+    border: 0.375em solid;
+    border-radius: 50%;
+    color: var(--nelmad-calendar-color-accent);
+}
+
+:where(.nc-theme) .nc-menu {
+    min-inline-size: 10em;
+    padding: var(--nelmad-calendar-spacing-xs);
+}
+
+:where(.nc-theme) .nc-menu-item {
+    display: flex;
+    align-items: center;
+    min-block-size: 44px;
+    padding: var(--nelmad-calendar-spacing-sm) var(--nelmad-calendar-spacing-md);
+    border-radius: var(--nelmad-calendar-radii-md);
+    cursor: pointer;
+}
+
+:where(.nc-theme) .nc-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nelmad-calendar-spacing-sm);
+    min-inline-size: 0;
+}
+
+:where(.nc-theme) .nc-stack[data-direction="row"] {
+    flex-flow: row wrap;
+    align-items: center;
+}
+
+:where(.nc-theme) .nc-text {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+:where(.nc-theme) .nc-text[data-tone="muted"] {
+    color: var(--nelmad-calendar-color-muted);
+}
+
+:where(.nc-theme) .nc-text[data-tone="danger"] {
+    color: var(--nelmad-calendar-color-danger);
+}
+
+:where(.nc-theme) .nc-skeleton {
+    display: block;
+    inline-size: 100%;
+    block-size: 1em;
+    border-radius: var(--nelmad-calendar-radii-sm);
+    background-color: var(--nelmad-calendar-color-border);
+    animation: nc-skeleton-pulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes nc-skeleton-pulse {
+    to { opacity: 0.4; }
+}
+
+:where(.nc-theme) .nc-button[data-focus-visible],
+:where(.nc-theme) .nc-checkbox[data-focus-visible],
+:where(.nc-theme) .nc-menu-item[data-focus-visible],
+:where(.nc-theme) .nc-dialog:focus-visible,
+:where(.nc-theme) .nc-menu:focus-visible {
+    outline: 2px solid var(--nelmad-calendar-color-focus);
+    outline-offset: 2px;
+}
+
+/* A portal theme root before its first mirror (§10.3.4): the mirrored values never animate in from the preset defaults. */
+.nc-theme[data-nc-mirror-pending] *,
+.nc-theme[data-nc-mirror-pending] *::before,
+.nc-theme[data-nc-mirror-pending] *::after {
+    transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :where(.nc-theme) .nc-button {
+        transition: none;
+    }
+
+    :where(.nc-theme) .nc-skeleton {
+        animation: none;
+    }
+
+    /* A static full bar: the progress stays visible without motion. */
+    :where(.nc-theme) .nc-calendar-progress-indicator {
+        inline-size: 100%;
+        animation: none;
+    }
+}
+
+@media (forced-colors: active) {
+    .nc-theme {
+        --nelmad-calendar-color-surface: Canvas;
+        --nelmad-calendar-color-text: CanvasText;
+        --nelmad-calendar-color-muted: CanvasText;
+        --nelmad-calendar-color-border: ButtonBorder;
+        --nelmad-calendar-color-accent: Highlight;
+        --nelmad-calendar-color-danger: LinkText;
+        --nelmad-calendar-color-focus: Highlight;
+        --nelmad-calendar-components-item-background: ButtonFace;
+        --nelmad-calendar-components-item-text: ButtonText;
+        --nelmad-calendar-components-selected-day-background: ButtonFace;
+        --nelmad-calendar-shadows-overlay: none;
+    }
+
+    :where(.nc-theme) .nc-skeleton {
+        border: 1px solid CanvasText;
+        animation: none;
+    }
+
+    /* Backgrounds become Canvas in forced colors: the progress keeps its own system colors. */
+    :where(.nc-theme) .nc-calendar-progress {
+        forced-color-adjust: none;
+        background-color: GrayText;
+    }
+
+    :where(.nc-theme) .nc-calendar-progress-indicator {
+        background-color: Highlight;
+    }
+
+    /* QA-09: items keep a visible box and continuation sides in system colors; days outside the month use GrayText. */
+    :where(.nc-theme) .nc-month-item {
+        border: 1px solid ButtonText;
+    }
+
+    :where(.nc-theme) .nc-month-item[data-continues-before] { border-inline-start-style: dashed; }
+    :where(.nc-theme) .nc-month-item[data-continues-after] { border-inline-end-style: dashed; }
+    :where(.nc-theme) .nc-day[data-outside-month] .nc-day-header { color: GrayText; }
+
+    /* Accent markers stay visible as system-colored borders; consumer colors do not survive forced colors (§10.3.3). */
+    :where(.nc-theme) .nc-item-accent,
+    :where(.nc-theme) .nc-source-accent { color: CanvasText; }
+}

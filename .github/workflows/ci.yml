@@ -5,6 +5,9 @@ on:
     branches: [main, master]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,12 +24,106 @@ jobs:
 
       - run: npm run typecheck
 
+      - run: npm run build
+
+      # The same tarball content check the Release workflow runs before staging.
+      - run: node scripts/check-pack.mjs
+
+      - run: npm run check:api
+
+      - run: npm run check:docs
+
+      - run: node scripts/docs/check-docs-selftest.mjs
+
+      # The requirement ledger is local-only (2026-10-23): without it this checks that the spec and the plan correspond.
+      - run: npm run check:requirements
+
+      - run: node --test scripts/implementation/requirements.checks.mjs scripts/implementation/harness.checks.mjs scripts/release/release-metadata.checks.mjs
+
+      - run: npm run check:timezones
+
+      - run: npm run check:transitions
+
+      - run: npm run typecheck:contract
+
       - run: npm run typecheck:storybook
 
       - run: npm run lint
 
       - run: npm test
 
-      - run: npm run build
+      - run: npm test -- src/v02/core/__tests__/date.test.ts src/v02/core/__tests__/locale.test.ts src/v02/core/__tests__/messages.test.tsx
+        env:
+          TZ: Africa/Monrovia
+          LANG: de_DE.UTF-8
+          LC_ALL: de_DE.UTF-8
 
       - run: npm run build-storybook
+
+  # One npm pack per run: the packed consumers and the milestone acceptance (SSR, hydration, keyboard, axe) test that file,
+  # and each first requires it to be byte-identical to the checkout's build.
+  packed-consumers:
+    # Ubuntu 24.04, not -latest: Playwright 1.55 (the spikes pin) refuses to install on Ubuntu 26.04 (no ffmpeg build for it).
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm ci --prefix scripts/implementation/spikes
+      - run: npx playwright install --with-deps chrome
+        working-directory: scripts/implementation/spikes
+      - run: npm run build
+      - run: npm run typecheck:contract
+        env:
+          CALENDAR_TYPESCRIPT_COMPILER: scripts/implementation/spikes/node_modules/typescript-min/lib/tsc.js
+      - name: Pack the archive once
+        id: archive
+        run: |
+          mkdir -p "$RUNNER_TEMP/candidate"
+          npm pack --pack-destination "$RUNNER_TEMP/candidate"
+          tarball=("$RUNNER_TEMP"/candidate/*.tgz)
+          echo "TARBALL=${tarball[0]}" >> "$GITHUB_ENV"
+          # The milestone is the prerelease id of the version (alpha.2); the acceptance refuses one it does not know.
+          echo "milestone=$(node -p "require('./package.json').version.split('-')[1] ?? 'stable'")" >> "$GITHUB_OUTPUT"
+      # The reports of these runs (manifests, logs) are CI artifacts; nothing is written into the repository.
+      - run: npm run check:package -- --tarball="$TARBALL" --output="$RUNNER_TEMP/packed-consumers"
+      - run: node scripts/implementation/alpha-acceptance.mjs --milestone="$MILESTONE" --tarball="$TARBALL" --output="$RUNNER_TEMP/packed-consumers/milestone-acceptance"
+        env:
+          MILESTONE: ${{ steps.archive.outputs.milestone }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: packed-consumers
+          path: ${{ runner.temp }}/packed-consumers
+
+  # The Chrome probes of the checkout sources and the Storybook smoke on every pull request.
+  browser-probes:
+    # Ubuntu 24.04: see packed-consumers.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm ci --prefix scripts/implementation/spikes
+      - run: npx playwright install --with-deps chrome
+        working-directory: scripts/implementation/spikes
+      - run: npm run build
+      - run: npm run build-storybook -- --disable-telemetry
+      - run: node scripts/implementation/browser-probes.mjs --output="$RUNNER_TEMP/browser-probes"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-probes
+          path: ${{ runner.temp }}/browser-probes

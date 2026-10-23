@@ -1,26 +1,57 @@
-export {DEFAULT_LOCALE} from '@/core/dayjs';
-export {Calendar} from '@/calendar/Calendar';
-export {CalendarSkeleton} from '@/calendar/CalendarSkeleton';
-export type {CalendarSkeletonProps} from '@/calendar/CalendarSkeleton';
-export {getMonthGridRange, getMonthGridWeeks} from '@/core/dateUtils';
-export {formatEventTime} from '@/core/formatEventTime';
-export {buildWeekLayout} from '@/core/buildWeekLayout';
-export type {EventSegment, WeekLayout} from '@/core/buildWeekLayout';
-export type {CalendarLabels} from '@/labels/types';
-export {defaultLabels} from '@/labels/defaultLabels';
-export type {CalendarTheme} from '@/theme/types';
-export {defaultTheme} from '@/theme/defaultTheme';
-export {
-    defaultPalette,
-    defaultOverdueColor,
-    defaultCriticalColor,
-    defaultProgressBarColor,
-} from '@/theme/defaultCalendarColors';
+export {Calendar} from './Calendar.js';
+export {getCalendarVisibleRange} from './v02/core/formatting.js';
+export {classicTheme} from './v02/themes/classic.js';
+export {neutralTheme} from './v02/themes/neutral.js';
+
+// Only the working alpha.2 slice is published (src/v02/surface.ts).
 export type {
-    CalendarEvent,
-    CalendarEventVariant,
+    ISODate,
+    RFC3339DateTime,
+    IanaTimeZone,
+    CalendarInterval,
+    CalendarItem,
+    CalendarDateRange,
+    CalendarVisibleRange,
+    CalendarWeekday,
+    CalendarVisibleRangeOptions,
+    CalendarItemPressRequest,
+    CalendarSortContext,
+    CalendarDataState,
+    CalendarLayout,
+    CalendarAgendaPresentation,
+    CalendarDensity,
+    CalendarColorScheme,
+    CalendarDirection,
+    CalendarHourCycle,
+    CalendarTheme,
+    CalendarThemeTokens,
+    CalendarCSSVariable,
+    CalendarMessages,
+    CalendarAgendaControlProps,
+    CalendarSource,
+    CalendarSourceFilterControlProps,
+    CalendarItemAction,
+    CalendarItemActionRequest,
+    CalendarItemActionsProps,
+    CalendarItemAppearance,
+    CalendarItemAppearanceContext,
+    CalendarResolvedLayout,
+    CalendarResolvedAgendaPresentation,
+    CalendarItemView,
+    CalendarRootState,
+    CalendarDayState,
+    CalendarItemSlotContext,
+    CalendarMonthItemSlotContext,
+    CalendarAgendaItemSlotContext,
+    CalendarAgendaState,
+    CalendarOverflowState,
+    CalendarToolbarSlotContext,
+    CalendarLoadingSlotContext,
+    CalendarEmptySlotContext,
+    CalendarErrorSlotContext,
+    CalendarClassName,
+    CalendarClassNames,
+    CalendarDataAttribute,
+    CalendarBaseProps,
     CalendarProps,
-    SeriesActionScope,
-    VariantColor,
-    VariantPalette,
-} from '@/types';
+} from './v02/public.js';

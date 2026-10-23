@@ -3,4 +3,20 @@ dist
 storybook-static
 coverage
 *.log
+# Raw run artifacts are not kept in the repository (process change 2026-10-22): the former evidence
+# directory is archived outside it; proof is re-runnable checks, CI artifacts and npm provenance.
+docs/implementation/evidence/
+# The requirement ledger is local-only (docs slimming 2026-10-23): `npm run check:requirements -- --write` regenerates it
+# from the specification, carrying statuses over only from an existing local copy (without one every record is `planned`;
+# to keep the recorded statuses, first `git fetch origin pull/4/head` and seed the file with
+# `git show c0077e3:docs/implementation/requirements-0.2.json`). Process notes and task reports are archived outside the
+# repository.
+docs/implementation/requirements-0.2.json
 .DS_Store
+examples/*.tgz
+examples/*/dist-server
+examples/*/.next
+examples/*/next-env.d.ts
+examples/*/*.tsbuildinfo
+# Nested Claude Code worktrees (eslint.config.js and vitest.config.ts skip them as git-ignored).
+.claude/worktrees/

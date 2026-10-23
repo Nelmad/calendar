@@ -1,24 +1,33 @@
 {
   "name": "@nelmad/calendar",
-  "version": "0.1.1",
-  "description": "Month-view task calendar with multi-day events, timezone support, and series actions",
+  "version": "0.2.0-alpha.2",
+  "description": "React month calendar with ISO intervals, IANA time zones and an accessible day agenda",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "react-server": {
+        "import": {
+          "types": "./dist/index.d.ts",
+          "default": "./dist/index.react-server.js"
+        },
+        "require": {
+          "types": "./dist/index.d.cts",
+          "default": "./dist/index.react-server.cjs"
+        }
+      },
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       },
       "require": {
-        "types": "./dist/index.d.ts",
+        "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
     },
-    "./styles.css": "./dist/index.css",
-    "./tokens.css": "./dist/tokens.css"
+    "./styles.css": "./dist/styles.css"
   },
   "files": [
     "dist",
@@ -44,27 +53,35 @@
     "lint:stylelint": "stylelint \"**/*.css\"",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "check:requirements": "node scripts/implementation/requirements.mjs",
+    "typecheck:contract": "node scripts/implementation/contracts.mjs",
+    "check:timezones": "node --test scripts/implementation/timezones/primary.checks.mjs && node scripts/implementation/timezones/generate.mjs",
+    "check:transitions": "node scripts/implementation/timezones/audit-transitions.mjs",
+    "check:package": "node scripts/implementation/packed-consumers.mjs",
+    "api:report": "node scripts/docs/api-report.mjs --write",
+    "check:api": "node scripts/docs/api-report.mjs",
+    "check:docs": "node scripts/docs/check-docs.mjs"
   },
   "publishConfig": {
     "access": "public"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "peerDependencies": {
-    "@react-aria/interactions": "^3.25.3",
-    "dayjs": "^1.11.13",
-    "react": ">=18",
-    "react-aria-components": "^1.18.0",
-    "react-dom": ">=18"
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0"
   },
   "dependencies": {
-    "classnames": "^2.5.1"
+    "@internationalized/date": "3.12.2",
+    "react-aria": "3.49.0",
+    "react-aria-components": "1.18.0",
+    "react-stately": "3.47.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
-    "@react-aria/interactions": "^3.25.3",
+    "@microsoft/api-extractor": "^7.59.1",
     "@storybook/addon-essentials": "8.6.18",
     "@storybook/react": "8.6.18",
     "@storybook/react-vite": "8.6.18",
@@ -75,13 +92,11 @@
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.6",
     "@vitejs/plugin-react": "^4.4.1",
-    "dayjs": "^1.11.13",
     "eslint": "^9.39.4",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "jsdom": "^26.1.0",
     "react": "^18.3.1",
-    "react-aria-components": "^1.18.0",
     "react-dom": "^18.3.1",
     "storybook": "8.6.18",
     "stylelint": "^17.13.0",

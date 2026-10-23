@@ -1,1 +1,0 @@
-export {EventDeleteDropdown} from './EventDeleteDropdown';

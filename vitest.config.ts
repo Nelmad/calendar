@@ -2,7 +2,7 @@ import {dirname, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 import react from '@vitejs/plugin-react';
-import {defineConfig} from 'vitest/config';
+import {configDefaults, defineConfig} from 'vitest/config';
 
 const rootDir = dirname(fileURLToPath(import.meta.url));
 
@@ -22,5 +22,7 @@ export default defineConfig({
     test: {
         environment: 'jsdom',
         setupFiles: ['./vitest.setup.ts'],
+        // Claude Code worktrees (git-ignored) are checkouts of other branches inside this one.
+        exclude: [...configDefaults.exclude, '.claude/worktrees/**'],
     },
 });

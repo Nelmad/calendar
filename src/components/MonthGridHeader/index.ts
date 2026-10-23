@@ -1,1 +1,0 @@
-export {MonthGridHeader} from './MonthGridHeader';

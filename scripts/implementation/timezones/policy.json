@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "status": "candidate",
+  "tzdb": {
+    "version": "2026c",
+    "url": "https://data.iana.org/time-zones/releases/tzdata2026c.tar.gz",
+    "archive": "vendor/tzdata2026c.tar.gz",
+    "sha256": "e4a178a4477f3d0ea77cc31828ff72aa38feff8d61aa13e7e99e142e9d902be4",
+    "build": "DATAFORM=main, BACKWARD=backward, PACKRATDATA=, PACKRATLIST=",
+    "sources": [
+      "africa",
+      "antarctica",
+      "asia",
+      "australasia",
+      "europe",
+      "northamerica",
+      "southamerica",
+      "etcetera",
+      "factory",
+      "backward"
+    ]
+  },
+  "standard": {
+    "revision": "ECMA-402, 12th edition, June 2025, sections 6.5, 6.5.1 and 6.5.3",
+    "url": "https://402.ecma-international.org/12.0/#sec-use-of-the-iana-time-zone-database"
+  },
+  "renamePolicy": {
+    "asOf": "2026-09-08",
+    "waitingYears": 2,
+    "pending": [],
+    "review": "tzdb NEWS through 2026c reviewed: last replacement rename Europe/Kiev -> Europe/Kyiv was in 2022b. Its waiting period has concluded; America/Coyhaique (2025b) is a split, not a rename. No host clock is used. Re-review on input updates."
+  },
+  "requiredMinimum": [
+    "UTC",
+    "Europe/Moscow",
+    "Europe/Berlin",
+    "America/New_York",
+    "Asia/Tokyo",
+    "Pacific/Apia"
+  ],
+  "runtimeReports": [
+    {
+      "path": "runtime/node.json",
+      "sha256": "b769c16ea94d9533be927920d2314ee100a85fe5c32846b9c133314bbb5fb0cb"
+    },
+    {
+      "path": "runtime/chrome.json",
+      "sha256": "0d3c062e76414d18044702293d1d2d264647b9fb82eac64c896c5d57c755355f"
+    }
+  ],
+  "releaseMatrixComplete": false
+}

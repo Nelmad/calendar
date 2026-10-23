@@ -1,0 +1,129 @@
+:root {
+    color-scheme: light dark;
+}
+
+body {
+    margin: 0;
+    background: #f6f5f2;
+    color: #21201f;
+    font: 16px/1.4 system-ui, sans-serif;
+}
+
+/* The calendar follows the viewer's color scheme by default (`colorScheme="system"`); the page does too. */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: #161514;
+        color: #faf7f3;
+    }
+
+    a {
+        color: #a9c7ff;
+    }
+}
+
+main {
+    max-width: 1100px;
+    padding: 0 24px 24px;
+    margin: auto;
+}
+
+.example-nav {
+    display: flex;
+    gap: 16px;
+    max-width: 1100px;
+    padding: 16px 24px 0;
+    margin: auto;
+}
+
+.example-title {
+    margin-block: 16px;
+    font-size: 1.5rem;
+}
+
+.release-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    align-items: center;
+    margin-block: 16px;
+}
+
+.release-toolbar h1 {
+    margin: 0 auto 0 0;
+    font-size: 1.5rem;
+}
+
+.release-state {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 4px 16px;
+    margin-block: 16px;
+}
+
+.release-state dd {
+    margin: 0;
+}
+
+.release-state code,
+.release-log code {
+    overflow-wrap: anywhere;
+}
+
+.release-log-title {
+    font-size: 1rem;
+}
+
+.release-log {
+    padding-inline-start: 20px;
+    margin: 0;
+}
+
+.workspace-row {
+    display: grid;
+}
+
+.workspace-calendar .is-done {
+    text-decoration: line-through;
+}
+
+/* State text for assistive technology inside passive slot content (it is part of the item's name). */
+.workspace-visually-hidden {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* A toolbar extension is consumer content: its size, focus style and name are the application's. */
+.workspace-density {
+    min-block-size: 44px;
+    padding-inline: 12px;
+    font: inherit;
+}
+
+/* The pressed state is visible, not only exposed as aria-pressed. */
+.workspace-density[aria-pressed="true"] {
+    font-weight: 600;
+    box-shadow: inset 0 0 0 2px currentcolor;
+}
+
+/* Phones: narrower gutters; the calendar itself switches to its mobile layout below 640 px of its own width. */
+@media (width < 600px) {
+    main {
+        padding: 0 12px 16px;
+    }
+
+    .example-nav {
+        padding: 12px 12px 0;
+    }
+
+    .release-state {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .release-state dd {
+        margin-block-end: 8px;
+    }
+}
