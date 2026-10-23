@@ -18,7 +18,14 @@ const output = resolve(process.argv[2] ?? mkdtempSync(join(tmpdir(), 'calendar-s
 const require = createRequire(import.meta.url);
 const types = {'.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.woff2': 'font/woff2'};
 const missing = [];
-const server = createServer((req, res) => { const path = resolve(root, '.' + decodeURIComponent(req.url.split('?')[0])); if (path !== root && !path.startsWith(root + sep) || !existsSync(path)) { missing.push(req.url); res.writeHead(404); return res.end(); } res.writeHead(200, {'content-type': types[extname(path)] ?? 'application/octet-stream'}); res.end(readFileSync(path)); }).listen(0);
+const notFound = (req, res) => { missing.push(req.url); res.writeHead(404); res.end(); };
+const server = createServer((req, res) => {
+    const path = resolve(root, '.' + decodeURIComponent(req.url.split('?')[0]));
+    // Only files inside the static build are served: the guard runs before anything reads the path (root itself is a directory).
+    if (!path.startsWith(root + sep)) return notFound(req, res);
+    if (!existsSync(path)) return notFound(req, res);
+    res.writeHead(200, {'content-type': types[extname(path)] ?? 'application/octet-stream'}); res.end(readFileSync(path));
+}).listen(0);
 const port = server.address().port;
 const {chromium} = await import('./spikes/node_modules/playwright/index.mjs');
 const browser = await chromium.launch({channel: 'chrome', headless: true}), pageErrors = [], consoleMessages = [], checks = [];
