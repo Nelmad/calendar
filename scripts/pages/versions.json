@@ -1,0 +1,8 @@
+{
+  "package": "@nelmad/calendar",
+  "basePath": "/calendar/",
+  "lines": [
+    {"line": "0.1", "ref": "v0.1.1", "scripts": ["build-storybook"]},
+    {"line": "0.2", "ref": "HEAD", "scripts": ["build", "build-storybook"]}
+  ]
+}

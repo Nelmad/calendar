@@ -1,24 +1,43 @@
 name: Deploy Storybook
 
+# One Storybook per release line, side by side (scripts/pages/versions.json): /calendar/<line>/ with a version switcher
+# in each manager, and /calendar/ redirecting to the line of the npm `latest` dist-tag. Pull requests build and assemble
+# the site for inspection; pushes to main, manual runs on main and finished releases deploy it.
 on:
   push:
-    branches: [main, master]
+    branches: [main]
+  pull_request:
   workflow_dispatch:
+  # The registry decides the root redirect and the prerelease marks at build time, and a release moves them only after
+  # its version bump is already on main. The tag and GitHub Release that Release creates with GITHUB_TOKEN start no
+  # workflow, so each completed Release run (the one after a late approval too) redeploys main.
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
 
+permissions:
+  contents: read
+
+# Deploys from main keep the 'pages' group; each pull request and each manual build of another branch builds in its own
+# group, so it never cancels a deploy, and a newer push cancels the older build.
 concurrency:
-  group: pages
+  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.event.pull_request.number) || (github.ref == 'refs/heads/main' && 'pages') || format('pages-build-{0}', github.ref) }}
   cancel-in-progress: true
 
 jobs:
   build:
+    # Named apart from the CI workflow's `build` check, which pull requests also run.
+    name: Build the Storybook site
+    # After a release only when it succeeded; this builds main, never the code of the run that triggered it.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
-      pages: write
-      id-token: write
-      actions: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v6
         with:
@@ -27,11 +46,41 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run build
+      - run: node --test scripts/pages/*.checks.mjs
 
-      - run: npm run build-storybook
-        env:
-          STORYBOOK_BASE_PATH: /calendar/
+      # The HEAD line from this commit, every other line from its tag in a git worktree (npm ci there), each with the npm
+      # scripts versions.json lists for it, STORYBOOK_BASE_PATH=/calendar/<line>/ and --disable-telemetry.
+      - run: node scripts/pages/assemble.mjs build --site "$RUNNER_TEMP/site" --work "$RUNNER_TEMP/lines"
+
+      # The switcher in each manager, versions.json and the root index.html and iframe.html redirects; the npm registry
+      # decides the latest line and which lines are still prereleases.
+      - run: node scripts/pages/assemble.mjs assemble --site "$RUNNER_TEMP/site"
+
+      # The assembled site: the input of the deploy job, and on pull requests the build to inspect.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: storybook-site
+          path: ${{ runner.temp }}/site
+          retention-days: 7
+          overwrite: true
+
+  # Runs only trusted actions, never the repository's code, so the write permissions stay here.
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: storybook-site
+          path: site
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -45,17 +94,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: storybook-static
+          path: site
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
