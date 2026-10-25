@@ -522,7 +522,7 @@ try {
     // QA-04: a page scrollbar that exists only in the taller desktop layout (classic scrollbars). The root content
     // box is 645 px without it and 645 - scrollbar with it, on both sides of the 640 px breakpoint. Inside that
     // feedback band [640 - scrollbar, 640 + scrollbar) neither layout fits the exact §7 boundary of the width it
-    // produces itself (no fixed point; spec draft v7 §7 resolves it, docs/decisions-0.2.md): the guard keeps the current
+    // produces itself (no fixed point; spec draft v7 §7 resolves it): the guard keeps the current
     // layout there (hysteresis), so the checks pin "one switch per crossing" and the exact boundary outside the band.
     const bands = {};
     // Window height between the heights of both layouts at this width (measured with a tall viewport, no scrollbar).

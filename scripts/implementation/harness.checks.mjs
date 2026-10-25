@@ -99,7 +99,7 @@ test('raw run artifacts are ignored by git and no script depends on docs/impleme
         'docs/implementation/evidence/any/screenshot.png', 'npm-debug.log'];
     const result = spawnSync('git', ['check-ignore', '--no-index', '--stdin'], {cwd: root, input: paths.join('\n'), encoding: 'utf8'});
     assert.deepEqual(result.stdout.trim().split('\n'), paths);
-    // Only the lint ignore of a leftover local copy, the ledger note (historical paths) and this check may name the archived directory.
+    // Only the lint ignore of a leftover local copy and this check may name the archived directory.
     const named = [], code = /\.(?:[cm]?js|ts|tsx|json|ya?ml|html)$/, skipped = new Set(['node_modules', '.next', 'dist', 'dist-server', 'dist-acceptance']);
     const scan = path => { if (/implementation\/evidence\b/.test(readFileSync(join(root, path), 'utf8'))) named.push(path); };
     const visit = (directory, deep) => {
@@ -110,16 +110,16 @@ test('raw run artifacts are ignored by git and no script depends on docs/impleme
     };
     visit('.', false);
     for (const directory of ['scripts', 'src', 'tests', 'stories', 'examples', '.github', '.storybook']) visit(directory, true);
-    assert.deepEqual(named.sort(), ['eslint.config.js', 'scripts/implementation/harness.checks.mjs', 'scripts/implementation/requirements.mjs']);
+    assert.deepEqual(named.sort(), ['eslint.config.js', 'scripts/implementation/harness.checks.mjs']);
 });
 
-// Docs slimming 2026-10-23: the requirement ledger is a local file, and nested Claude Code worktrees (skipped by the lint
-// and test configs) are not part of the repository either.
-test('the local requirement ledger and nested worktrees are ignored by git', () => {
-    const paths = ['docs/implementation/requirements-0.2.json', '.claude/worktrees/any/package.json'];
+// Owner decision 2026-10-26: the maintainers' local notes (.notes/: the internal documents, the requirement ledger and its
+// tools; absent in CI) and nested Claude Code worktrees (skipped by the lint and test configs) are not part of the repository.
+test('the local notes folder and nested worktrees are ignored by git', () => {
+    const paths = ['.notes/requirements-0.2.json', '.notes/tools/requirements.mjs', '.claude/worktrees/any/package.json'];
     const result = spawnSync('git', ['check-ignore', '--no-index', '--stdin'], {cwd: root, input: paths.join('\n'), encoding: 'utf8'});
     assert.deepEqual(result.stdout.trim().split('\n'), paths);
-    assert.equal(spawnSync('git', ['ls-files', '--error-unmatch', paths[0]], {cwd: root, encoding: 'utf8'}).status, 1, 'the ledger is not tracked');
+    assert.equal(spawnSync('git', ['ls-files', '.notes'], {cwd: root, encoding: 'utf8'}).stdout, '', 'nothing in .notes/ is tracked');
 });
 
 test('the documented Vite example server answers 404 for a missing asset and keeps running', async () => {

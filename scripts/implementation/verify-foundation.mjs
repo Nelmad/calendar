@@ -9,11 +9,9 @@ import {join, resolve} from 'node:path';
 const output = resolve(process.argv[2] ?? mkdtempSync(join(tmpdir(), 'calendar-validation-')));
 mkdirSync(output, {recursive: true});
 const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
+// The internal specification, plan and requirement ledger are local maintainer notes outside the repository (2026-10-26):
+// this run checks and hashes repository files only.
 const commands = [
-    // The ledger is local and git-ignored since 2026-10-23: without a local copy this checks the spec/plan correspondence only.
-    ['requirements', 'npm', ['run', 'check:requirements']],
-    // Decisions 2026-10-22 fix round 1: shape of the carried ledger records (DV8-1-01).
-    ['requirements-selftest', 'node', ['--test', 'scripts/implementation/requirements.checks.mjs']],
     ['timezones', 'npm', ['run', 'check:timezones']],
     ['transitions', 'npm', ['run', 'check:transitions']],
     ['typecheck', 'npm', ['run', 'typecheck']],
@@ -73,7 +71,7 @@ const sourcePaths = [
     'src/v02/calendar/__tests__/hydration.test.tsx',
     'src/v02/calendar/__tests__/model.test.tsx', 'src/v02/calendar/__tests__/diagnostics.test.tsx',
     'src/v02/core/overlayStack.ts', 'src/v02/core/__tests__/overlayStack.test.ts', 'src/v02/calendar/overlays.tsx', 'src/v02/calendar/portal.ts',
-    'src/v02/core/placement.ts', 'src/v02/core/__tests__/placement.test.ts', 'docs/specification-0.2.md', 'docs/implementation-plan-0.2.md', 'docs/decisions-0.2.md',
+    'src/v02/core/placement.ts', 'src/v02/core/__tests__/placement.test.ts',
     'src/v02/calendar/__tests__/overlays.test.tsx', 'src/v02/calendar/__tests__/overlays.subscriptions.test.tsx', 'src/v02/calendar/__tests__/overlays.renders.test.tsx', 'src/v02/primitives/mirror.ts', 'src/v02/primitives/PortalTheme.tsx',
     'scripts/implementation/overlay-entry.tsx', 'scripts/implementation/overlay-probe.mjs',
     'src/v02/calendar/modality.ts', 'src/v02/calendar/__tests__/hosts.test.tsx', 'src/v02/calendar/__tests__/opening.test.tsx', 'scripts/implementation/host-probe.mjs',
@@ -103,7 +101,7 @@ const sourcePaths = [
     '.github/workflows/release.yml', 'RELEASING.md', 'scripts/check-pack.mjs', 'scripts/release/release-metadata.mjs', 'scripts/release/release-metadata.checks.mjs', 'scripts/implementation/browser-probes.mjs',
     'docs/implementation/timezones-candidate.json',
     'src/v02/reference.d.ts', 'vite.lib.config.ts', 'stylelint.config.js', '.github/workflows/ci.yml',
-    'scripts/implementation/contracts.mjs', 'scripts/implementation/requirements.mjs', 'scripts/implementation/ledger-evidence.mjs', 'scripts/implementation/requirements.checks.mjs',
+    'scripts/implementation/contracts.mjs',
     'scripts/implementation/spikes/package-lock.json', 'scripts/implementation/verify-foundation.mjs',
     'eslint.config.js', 'tsconfig.storybook.json', 'stories/support.tsx', 'stories/css-inline.d.ts', 'scripts/implementation/portal-stories-check.mjs',
     'scripts/implementation/examples-dev-entry.tsx', 'scripts/implementation/examples-dev-probe.mjs', 'examples/vite/README.md', 'examples/vite/README.ru.md', 'examples/next/README.md', 'examples/next/README.ru.md',

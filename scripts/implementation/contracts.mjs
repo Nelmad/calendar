@@ -10,16 +10,33 @@ const sha = value => createHash('sha256').update(value).digest('hex');
 // writes to a fresh temporary directory: run reports are never written into the repository (process change 2026-10-22).
 const outputArgument = process.argv.find(argument => argument.startsWith('--output='))?.slice('--output='.length);
 const reports = resolve(outputArgument || mkdtempSync(join(tmpdir(), 'calendar-contracts-')));
-const source = readFileSync('docs/specification-0.2.md', 'utf8');
-const canonical = source.match(/### 5\.7\.[\s\S]*?```ts\n([\s\S]*?)\n```/)[1];
+// The committed private reference is the full 0.2 contract that CI checks. The internal specification is not part of the
+// repository (2026-10-26): `--spec=<path>` checks the reference against the §5.7 block of a local copy, and `--write`
+// with it regenerates the reference; without `--spec` the sync is skipped and the report records no specification hash.
 const declarationPath = 'src/v02/reference.d.ts';
-const expected = '// Generated from specification-0.2.md §5.7. Private reference; not a package entry.\n' + canonical + '\n';
-if (process.argv.includes('--write')) {
-    mkdirSync('src/v02', {recursive: true});
-    writeFileSync(declarationPath, expected);
+const header = '// The full 0.2 public contract (internal specification §5.7). Private reference; not a package entry.\n';
+const specArgument = process.argv.find(argument => argument.startsWith('--spec='))?.slice('--spec='.length);
+assert.ok(specArgument !== '' && !process.argv.includes('--spec'), 'Pass the specification as --spec=<path>');
+let specificationSha256 = null;
+if (specArgument) {
+    const source = readFileSync(resolve(specArgument), 'utf8');
+    const block = source.match(/### 5\.7\.[\s\S]*?```ts\n([\s\S]*?)\n```/);
+    assert.ok(block, `${specArgument}: no §5.7 TypeScript block`);
+    const expected = header + block[1] + '\n';
+    if (process.argv.includes('--write')) {
+        mkdirSync('src/v02', {recursive: true});
+        writeFileSync(declarationPath, expected);
+    }
+    assert.equal(readFileSync(declarationPath, 'utf8'), expected, `Private reference differs from §5.7 of ${specArgument}`);
+    specificationSha256 = sha(source);
+    console.log(`${declarationPath} matches §5.7 of ${specArgument}`);
+} else {
+    assert.ok(!process.argv.includes('--write'), '--write regenerates the reference from a specification: pass --spec=<path>');
+    console.log(`No --spec=<path>: ${declarationPath} is the contract; the specification sync is skipped.`);
 }
-assert.equal(readFileSync(declarationPath, 'utf8'), expected, 'Private reference differs from normative §5.7');
-assert.ok(!/(?:dayjs|@internationalized\/date|react-aria)/.test(canonical), 'Internal dependency in public reference');
+const declaration = readFileSync(declarationPath, 'utf8');
+assert.ok(declaration.startsWith(header), `${declarationPath} must start with: ${header.trim()}`);
+assert.ok(!/(?:dayjs|@internationalized\/date|react-aria)/.test(declaration.slice(header.length)), 'Internal dependency in public reference');
 const compiler = resolve(process.env.CALENDAR_TYPESCRIPT_COMPILER ?? 'node_modules/typescript/lib/tsc.js');
 const invoke = args => spawnSync(process.execPath, [compiler, ...args], {encoding: 'utf8'});
 const version = invoke(['--version']);
@@ -33,9 +50,9 @@ const output = join(reports, 'reference');
 mkdirSync(output, {recursive: true});
 const report = {
     date: new Date().toISOString(), node: process.version, compiler: version.stdout.trim(),
-    specificationSha256: sha(source), declarationSha256: sha(expected),
+    specificationSha256, declarationSha256: sha(declaration),
     fixtureHashes: Object.fromEntries(['positive.ts', 'negative.ts', 'messages.ts', 'tsconfig.bundler.json', 'tsconfig.nodenext.json'].map(name => [name, sha(readFileSync(`tests/contracts/0.2/${name}`))])),
-    scope: 'Normative full 0.2 reference and internal T08 message typing. Public alpha.1 declarations are checked separately by packed-consumers.mjs; release min/latest matrix remains T27.',
+    scope: 'Committed full 0.2 reference (src/v02/reference.d.ts) and internal T08 message typing. Public alpha.1 declarations are checked separately by packed-consumers.mjs; release min/latest matrix remains T27.',
     checks,
 };
 writeFileSync(`${output}/typescript-${version.stdout.trim().split(' ')[1]}.json`, JSON.stringify(report, null, 2) + '\n');
@@ -67,7 +84,7 @@ const packageVersion = JSON.parse(readFileSync('package.json', 'utf8')).version;
 const publicOutput = join(reports, 'public');
 mkdirSync(publicOutput, {recursive: true});
 writeFileSync(`${publicOutput}/typescript-${version.stdout.trim().split(' ')[1]}.json`, JSON.stringify({
-    date: new Date().toISOString(), node: process.version, compiler: version.stdout.trim(), declarationSha256: sha(expected),
+    date: new Date().toISOString(), node: process.version, compiler: version.stdout.trim(), declarationSha256: sha(declaration),
     sourceHashes: Object.fromEntries(['src/index.ts', 'src/Calendar.tsx', 'src/v02/public.ts', 'src/v02/surface.ts'].map(path => [path, sha(readFileSync(path))])),
     fixtureHashes: Object.fromEntries(fixtures.map(name => [name, sha(readFileSync(`tests/contracts/public/${name}`))])),
     scope: `Public ${packageVersion} surface gate declarations, strict + exactOptionalPropertyTypes + skipLibCheck=false. The CommonJS fixture (consumers/shared/require.cts) runs only against the packed declarations in packed-consumers.mjs.`,

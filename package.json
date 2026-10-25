@@ -54,7 +54,6 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "prepublishOnly": "npm run build",
-    "check:requirements": "node scripts/implementation/requirements.mjs",
     "typecheck:contract": "node scripts/implementation/contracts.mjs",
     "check:timezones": "node --test scripts/implementation/timezones/primary.checks.mjs && node scripts/implementation/timezones/generate.mjs",
     "check:transitions": "node scripts/implementation/timezones/audit-transitions.mjs",

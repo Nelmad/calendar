@@ -21,6 +21,8 @@ export default defineConfig(
             'examples/*/next-env.d.ts',
             // Claude Code worktrees (git-ignored) are checkouts of other branches inside this one.
             '.claude/worktrees/**',
+            // Local maintainer notes and their tools (git-ignored); not part of the repository.
+            '.notes/**',
         ],
     },
     js.configs.recommended,

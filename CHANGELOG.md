@@ -76,12 +76,11 @@ passes in CI on the packed archive in Vite with React 18 and Next.js with React 
   `portalContainer` still wins. If the default changes while an agenda is open, also by an attribute alone (`aria-modal`
   removed or added, a `<dialog>` closed), the agenda closes as on a change of `portalContainer`. A plain `role="dialog"` or `role="alertdialog"` without `aria-modal="true"` (a side panel,
   a toast) and a `<dialog>` opened with `show()` are not modal containers: the agenda portals to `body` there, and such an
-  element shown above the modal sheet is inert background instead of a host layer the sheet yields to (specification
-  draft v7, §10.3.4).
-- Specification draft v7 (clarifications approved on 2026-10-09) documents the `layout="auto"` scrollbar feedback band
-  (§7; `scrollbar-gutter: stable` on the scrolling ancestor avoids it), the `tokens` single-declaration rule as a security
-  rule (§10.3.2) and the server render of `"auto"`: the compact month has an inline agenda only with
-  `agendaPresentation="auto"`, none with `"overlay"` until a date is activated (§11.3).
+  element shown above the modal sheet is inert background instead of a host layer the sheet yields to.
+- Documented: the `layout="auto"` scrollbar feedback band
+  (`scrollbar-gutter: stable` on the scrolling ancestor avoids it), the `tokens` single-declaration rule as a security
+  rule and the server render of `"auto"`: the compact month has an inline agenda only with
+  `agendaPresentation="auto"`, none with `"overlay"` until a date is activated.
 - All package overlays share `z-index: 100000` (the sheet backdrop was `1000`) and keep pointer events under
   `body { pointer-events: none }`.
 - Only a press on the sheet backdrop itself dismisses the sheet; a press inside the sheet or on a package menu above it
@@ -104,7 +103,7 @@ passes in CI on the packed archive in Vite with React 18 and Next.js with React 
   bracket, an unmatched closing bracket, a trailing escape, or a leading or trailing character that JavaScript `trim()`
   removes but CSS keeps) or that contains any `url(` (also a well-formed one, nested in a function such as `image-set()`,
   or spelled with escapes such as `u\72l(`) is ignored like a blank value, with the warning
-  `tokens.<group>.<token>: Expected a single CSS declaration value` (specification draft v7, §10.3.2).
+  `tokens.<group>.<token>: Expected a single CSS declaration value`.
 - `aria-busy="true"` of `loading/refresh` is set on the stale content (the grid and an inline agenda) instead of the root,
   so the calendar's live regions and its status regions are no longer inside a busy subtree.
 - The comfortable density default of `density.dayMinHeight` is `128px` (was `120px`), so it shows the two lanes that
@@ -115,17 +114,17 @@ passes in CI on the packed archive in Vite with React 18 and Next.js with React 
 - Times: a 12-hour clock no longer pads the hour (`4:00 PM`, not `04:00 PM`); a 24-hour clock keeps a two-digit hour in
   every locale, so midnight is `00:…`. A timed interval within one date names that date once, a wall time that a DST fold repeats shows its UTC
   offset, and a year below 1000 shows its era (`February 1 AD`).
-- Specification draft v8 (clarifications approved on 2026-10-22) documents four rules: however the toolbar source
+- Four rules are now documented: however the toolbar source
   selector closes (`Escape`, close, its trigger, a press outside or on the sheet backdrop, a layout switch, a new portal
   target), focus that was in it returns to its trigger, and the general recovery order applies only without a trigger
-  that can take focus (§12.3); `CalendarSource.color` and every `getItemAppearance` color follow the single-declaration
-  rule of `tokens`, so an offending value is absent on the server and the client and the lower layer stays (§10.3.3);
-  under a strict CSP hydration writes back only the calendar's own validated declarations (§10.3.4, see below); the
-  accessible name of an agenda row with `renderAgendaItem` is the default summary followed by the visible content (§12.1).
+  that can take focus; `CalendarSource.color` and every `getItemAppearance` color follow the single-declaration
+  rule of `tokens`, so an offending value is absent on the server and the client and the lower layer stays;
+  under a strict CSP hydration writes back only the calendar's own validated declarations (see below); the
+  accessible name of an agenda row with `renderAgendaItem` is the default summary followed by the visible content.
 - Under a strict `style-src` the root `style` prop is no longer written back after hydration: only the calendar's own
   validated declarations are (the `tokens` of the root, except a variable that `style` replaces, and the grid row count).
   Like any other inline style of the page, a root `style` stays subject to the policy; move such styles into a
-  stylesheet through `className` (specification draft v8, §10.3.4).
+  stylesheet through `className`.
 
 ### Fixed
 
@@ -251,7 +250,7 @@ passes in CI on the packed archive in Vite with React 18 and Next.js with React 
 - The desktop popover and the source menu close only on a primary press that starts and ends outside them: a text
   selection dragged out of them or a secondary-button press does not close them.
 - A modal sheet with `portalContainer` set to the `<html>` element makes the body its inert background.
-- Enter on a date in the mobile layout scrolls the focused inline agenda heading into view; §12.3 recovery targets other
+- Enter on a date in the mobile layout scrolls the focused inline agenda heading into view; focus recovery targets other
   than date cells are revealed too.
 - A well-formed locale with an unknown numbering system (`en-u-nu-xyz`) renders instead of throwing an ICU error from
   render, server rendering and `getCalendarVisibleRange`.

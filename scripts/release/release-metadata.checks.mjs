@@ -103,8 +103,8 @@ test('CI runs every gate on pull requests and pushes to main with a read-only to
     // Whole `- run:` lines, not substrings: `npm test` must not be satisfied by the Monrovia `npm test -- …` step (RA-1-01).
     const runs = [...workflow.matchAll(/^ +- run: (.+)$/gm)].map(match => match[1]);
     for (const command of ['npm ci', 'npm run typecheck', 'npm run typecheck:storybook', 'npm run lint', 'npm test', 'npm run build', 'node scripts/check-pack.mjs',
-        'npm run typecheck:contract', 'npm run check:requirements',
-        'node --test scripts/implementation/requirements.checks.mjs scripts/implementation/harness.checks.mjs scripts/release/release-metadata.checks.mjs',
+        'npm run typecheck:contract',
+        'node --test scripts/implementation/harness.checks.mjs scripts/release/release-metadata.checks.mjs',
         'npm run check:timezones', 'npm run check:transitions', 'npm run check:docs', 'node scripts/docs/check-docs-selftest.mjs', 'npm run check:api', 'npm run build-storybook',
         'npm run check:package -- --tarball="$TARBALL" --output="$RUNNER_TEMP/packed-consumers"',
         'node scripts/implementation/alpha-acceptance.mjs --milestone="$MILESTONE" --tarball="$TARBALL" --output="$RUNNER_TEMP/packed-consumers/milestone-acceptance"',

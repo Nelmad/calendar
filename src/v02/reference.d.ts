@@ -1,4 +1,4 @@
-// Generated from specification-0.2.md §5.7. Private reference; not a package entry.
+// The full 0.2 public contract (internal specification §5.7). Private reference; not a package entry.
 import type {CSSProperties, ReactElement, ReactNode} from 'react';
 
 export type ISODate = string;

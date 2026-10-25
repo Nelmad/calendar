@@ -624,7 +624,7 @@ month does not call it. Focus rules are in the [README](../README.md#navigation)
   width it produces itself, so the calendar keeps its current layout there (a height-only change decides nothing); for
   example desktop stays at a 630 px content width next to a 15 px scrollbar. Outside the band the exact breakpoint decides
   again. A window resized or dragged through the band therefore switches once per crossing, not on every step. Changing
-  `mobileBreakpoint` or `layout` forgets the band. This is the rule of the specification (§7, draft v7). To avoid the
+  `mobileBreakpoint` or `layout` forgets the band. To avoid the
   feedback altogether, reserve the scrollbar space on the scrolling ancestor, for example
   `html { scrollbar-gutter: stable; }`: then both layouts measure the same width and the exact breakpoint always decides.
 
@@ -836,7 +836,7 @@ that loads URLs. Other functions that take a resource as a string, such as `imag
 properties and never load them, but your CSS or slot content that uses a token variable in an image property would.
 Validate tenant values yourself if you use the variables that way. Tokens are read the way CSS reads them, so an escaped spelling such as `u\72l(` or `\75 rl(` is
 a `url(` too, while `url(` inside a quoted string or a comment is text. An accepted value is passed trimmed, so React 18
-and React 19 write the same text on the server and on the client: server and client then render the same declarations. This is a security rule of the specification (§10.3.2, draft v7), decided the same way on the server and
+and React 19 write the same text on the server and on the client: server and client then render the same declarations. This is a security rule, decided the same way on the server and
 the client, not CSS validation: no `CSS.supports` and no computed styles are read. Values are otherwise not parsed or validated as CSS: an
 invalid value is a styling error with normal CSS behavior, not a contract error. Tokens are not applied in the contract
 error shell.
@@ -874,7 +874,7 @@ text, where a value containing `;` becomes further declarations, while a client 
 or tenant settings through `tokens`. Under a strict CSP (`style-src` without `'unsafe-inline'` or `style-src-attr`) the
 browser blocks the server-rendered `style` attribute, and hydration writes back only the calendar's own validated
 declarations (the `tokens`, without a variable that `style` replaces), never `style`: like your other inline styles it
-stays subject to your policy (§10.3.4, draft v8; see [Styles](../README.md#styles)).
+stays subject to your policy (see [Styles](../README.md#styles)).
 
 <a id="prop-id"></a>
 ### `id`
@@ -919,8 +919,8 @@ activation, an item actions or source selector trigger, or a layout switch that 
 popover or sheet), so a dialog that opens around an already mounted calendar is used by the next overlay; if the default
 changes while an agenda is open,
 also by an attribute alone (`aria-modal` added or removed, a `<dialog>` closed or shown), the agenda closes as on a change
-of `portalContainer`. An explicit valid `portalContainer` always wins. This is the rule
-of the specification (§10.3.4, draft v7). If your modal library renders a dialog without `aria-modal="true"` (some set
+of `portalContainer`. An explicit valid `portalContainer` always wins.
+If your modal library renders a dialog without `aria-modal="true"` (some set
 only `role="dialog"` and trap focus), pass that dialog as `portalContainer`. Radix Dialog and the React Aria Components
 `Modal` and `Popover` are such libraries: with the default the agenda opens in `body` and the host's focus trap closes it
 at once, or a host popover closes on the outside focus and unmounts the calendar. When the default resolves to `body` for
@@ -1054,8 +1054,8 @@ still applies.
 If fewer than two valid sources remain or the pair is removed while the selector is open, it closes and focus that was in it
 moves to the current date cell. A change of the resolved layout closes it without opening the other presentation, and
 focus that was in it returns to the trigger. Closing it otherwise (`Escape`, the close button, a press on a blank area of
-the page, a new `portalContainer` or default portal target) also returns focus that was in it to the trigger. This is the
-rule of the specification (§12.3, draft v8): however the selector closes, focus that was inside it returns to its own
+the page, a new `portalContainer` or default portal target) also returns focus that was in it to the trigger. In short:
+however the selector closes, focus that was inside it returns to its own
 toolbar trigger (the WAI-ARIA menu button pattern); only without a trigger that can take focus (fewer than two sources,
 the pair removed, the trigger disabled) the general recovery order applies, and focus that already moved outside, for
 example by a press on another control or by `Tab`, stays there. A blocking `dataState`
@@ -1086,7 +1086,7 @@ gives the warning `getItemAppearance("<id>").<field>: Expected a nonempty CSS co
 or undefined; ignored`. A value that is not exactly one declaration value (the same rule as for [`tokens`](#prop-tokens):
 `;`, `!important`, unbalanced quotes, brackets or comments, `url(` also spelled with escapes) is ignored with `Expected a
 single CSS declaration value; ignored`, so server and client write the same declarations, and the lower layer stays (the
-source accent for `accentColor`, otherwise the theme token). This is the rule of the specification (§10.3.3, draft v8). Anything else is written as its own CSS color
+source accent for `accentColor`, otherwise the theme token). Anything else is written as its own CSS color
 declaration over the lower layer, without CSS parsing: a value the browser rejects at assignment leaves the lower
 layer; a value valid as syntax but invalid at computed-value time (an unresolved `var()`) follows the normal CSS
 rules. Custom slot content inherits the item text color. Focus rings and state markers are not part of the appearance,
@@ -1140,7 +1140,7 @@ mutations are not seen, and an undetected violation is still not supported.
 />
 ```
 
-Allowed and not allowed slot content (§10.4):
+Allowed and not allowed slot content:
 
 ```tsx
 // Allowed: passive text, static badges and icons.
@@ -1159,7 +1159,7 @@ getItemActions={() => [{id: 'archive', label: 'Archive'}]}
 `(context: CalendarAgendaItemSlotContext<TItemData, TSourceData>) => ReactNode`. Replaces the visible content of an agenda row;
 called once per item of the agenda date. The default summary (title, times, source) stays as visually hidden text and starts
 the accessible name of the row's press control; the visible custom content follows it in the name, so what the user sees
-is part of what assistive technologies and speech input use (WCAG 2.5.3, specification §12.1, draft v8). Without the slot
+is part of what assistive technologies and speech input use (WCAG 2.5.3). Without the slot
 the name is the summary alone. The row keeps its accent
 marker and colors, and the actions trigger stays outside the custom content. The passive-content rules of
 [`renderItem`](#prop-renderitem) apply.

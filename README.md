@@ -151,7 +151,7 @@ count of the grid and the item colors of the agenda rows, so the hydrated month 
 writes them property by property, as a client render does, never as the blocked attribute text. The `style` you pass to
 the root is not written again: like any inline style of your page it stays subject to your policy, so under a strict
 policy put such styles into your stylesheet through `className`. This is not a CSP bypass, and no stylesheet is
-injected (specification draft v8, §10.3.4). Until hydration (and without JavaScript) the server HTML renders without these
+injected. Until hydration (and without JavaScript) the server HTML renders without these
 declarations, and the browser reports a violation for each blocked attribute. To avoid both, allow attributes with `style-src-attr 'unsafe-inline'`, for
 example `style-src 'self' 'nonce-…'; style-src-attr 'unsafe-inline'`. Styles that the calendar sets from JavaScript are
 not affected.
@@ -312,7 +312,7 @@ and deleting stay your own operations ([API reference](docs/api.md#prop-getitema
 props accept: a toggle calls the callback and changes nothing until the new array arrives. Items without `calendarId` or
 with an unknown one always stay visible ([API reference](docs/api.md#prop-sources)). However the selector closes
 (`Escape`, its close button or its trigger, a press outside, a layout switch, a new portal target), focus that was in it
-returns to its toolbar button; focus that already moved elsewhere stays there (specification draft v8, §12.3).
+returns to its toolbar button; focus that already moved elsewhere stays there.
 
 <a id="responsive"></a>
 ## Responsive layout
@@ -465,9 +465,8 @@ Per item, `CalendarSource.color` colors only the accent marker of a known source
 accent, background and text of one item independently; every segment and the agenda row of an item share its colors.
 These colors follow the same single-declaration rule as `tokens`: a value with a top-level `;` or `!`, unbalanced quotes,
 brackets or comments, or any `url(` (also spelled with escapes) is ignored with a development warning, identically on the
-server and the client, and the lower layer stays (the source accent, then the theme token; specification draft v8,
-§10.3.3). With `renderAgendaItem` the accessible name of an agenda row is the default summary followed by your visible
-content (§12.1).
+server and the client, and the lower layer stays (the source accent, then the theme token). With `renderAgendaItem` the
+accessible name of an agenda row is the default summary followed by your visible content.
 `classNames` adds classes to package surfaces from their typed state, and the content slots `renderItem`,
 `renderAgendaItem`, `renderDayHeader`, `renderToolbarContent`, `renderLoading`, `renderEmpty` and `renderError` replace or
 extend visible content while the calendar keeps its roles, names and focus. Item and day slots take passive content only
