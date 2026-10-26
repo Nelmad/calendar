@@ -7,9 +7,9 @@ React month calendar with ISO intervals, IANA time zones and an accessible day a
 <a id="status"></a>
 ## Status
 
-> **`0.2.0-alpha.2` candidate: unpublished, awaiting a separate publication decision.** It is a breaking replacement for `0.1`: the 0.1
-> props, helpers, palettes, labels and token stylesheet are gone and there is no compatibility layer. This prerelease covers
-> one working slice: the Month view with a responsive layout chosen from the calendar's own width (a desktop grid or a
+> **`0.2.0-alpha.2` is a prerelease, published on npm under the `next` dist-tag; `latest` remains `0.1.1`.** It is a
+> breaking replacement for `0.1`: the 0.1 props, helpers, palettes, labels and token stylesheet are gone and there is no
+> compatibility layer. This prerelease covers one working slice: the Month view with a responsive layout chosen from the calendar's own width (a desktop grid or a
 > compact mobile grid), a complete day agenda as a non-modal popover, an inline region below the mobile grid or a modal
 > sheet, controlled navigation and visible-range loading, data states, `onItemPress`, item actions in the agenda,
 > controlled sources with a built-in selector, localization, `classicTheme` and `neutralTheme` with tokens, item
@@ -26,17 +26,22 @@ Contents: [Install](#install) · [Quick start](#quick-start) · [Styles and the 
 <a id="install"></a>
 ## Install
 
-The package needs React and ReactDOM `^18.2.0 || ^19.0.0` (one matching pair) and Node.js 22 or newer for SSR and
-builds. The date and accessibility libraries are ordinary dependencies: nothing else needs to be installed, and Day.js
-is not used.
+Requirements: React and ReactDOM `^18.2.0 || ^19.0.0` (one matching pair) and Node.js 22 or newer for SSR and builds.
+`0.1.1` accepted any React from 18 and Node.js 18. The date and accessibility libraries are ordinary dependencies:
+nothing else needs to be installed, and Day.js is not used.
 
-After publication:
+`0.2.0-alpha.2` is published on npm under the `next` dist-tag, while `latest` remains `0.1.1`: a plain
+`npm install @nelmad/calendar` still installs 0.1. Install the prerelease by its exact version and pin it:
 
 ```sh
-npm install @nelmad/calendar@0.2.0-alpha.2
+npm install @nelmad/calendar@0.2.0-alpha.2 --save-exact
 ```
 
-The version is not on the registry yet. Until it is, build and pack this repository and install the archive:
+Without `--save-exact` npm saves the caret range `^0.2.0-alpha.2`, which also accepts later `0.2.0` prereleases; the
+API may still change between prereleases until `0.2.0`, so update a pinned prerelease deliberately, with the
+[changelog](CHANGELOG.md).
+
+To test an unreleased commit of this repository instead, build and pack it and install the archive:
 
 ```sh
 # In a checkout of this repository
@@ -47,7 +52,8 @@ npm pack
 npm install /path/to/nelmad-calendar-0.2.0-alpha.2.tgz
 ```
 
-The [Vite](examples/vite/README.md) and [Next.js](examples/next/README.md) examples are runnable apps built this way. Their
+The [Vite](examples/vite/README.md) and [Next.js](examples/next/README.md) examples in this repository are runnable apps
+that install such an archive of the checkout. Their
 `/workspace` route shows the alpha.2 integrations together: responsive layouts, the mobile agenda, item actions, a source
 filter that your backend accepts later, `neutralTheme` with tokens, slots and class callbacks, and a calendar inside a
 ShadowRoot with its portals.
@@ -581,8 +587,8 @@ typed as unavailable).
 <a id="limitations"></a>
 ## Known limitations
 
-- **Unpublished candidate.** `0.2.0-alpha.2` is not on npm; publication is a separate decision. Install the packed archive.
-  Prereleases may still change the API.
+- **Prerelease on the `next` dist-tag.** `0.2.0-alpha.2` is an alpha: later prereleases may still change the API before
+  `0.2.0`. `latest` remains `0.1.1`, so install the exact version and pin it ([Install](#install)).
 - **Only the current slice is available.** Every prop of the planned `0.2` API that is not described above is typed as
   unavailable (`?: never`) and, if passed anyway, removed at runtime with a development warning; it is never a silent
   no-op.
@@ -614,8 +620,9 @@ typed as unavailable).
 <a id="migration"></a>
 ## Migrating from 0.1
 
-`0.2` is a breaking release without compatibility adapters. In short: `events` become `items` with domain fields in `data`;
-choose an IANA `timeZone` instead of `utcOffset`/`timezone`; convert inclusive all-day ends to exclusive ones (dates 3–4
+`0.2` is a breaking release without compatibility adapters. It needs Node.js 22 or newer and a matching React/ReactDOM
+pair `^18.2.0 || ^19.0.0` (0.1 accepted Node.js 18 and any React from 18). In short: `events` become `items` with domain
+fields in `data`; choose an IANA `timeZone` instead of `utcOffset`/`timezone`; convert inclusive all-day ends to exclusive ones (dates 3–4
 September become `[2026-09-03, 2026-09-05)`, a missing end means one day); keep timed instants, noting that an end at
 midnight no longer occupies the next day; replace `onEventPress` with `onItemPress` and `isFetching`/`CalendarSkeleton`
 with `dataState`; replace `palette`, `theme` objects, `labels` and `@nelmad/calendar/tokens.css` with `tokens`, CSS

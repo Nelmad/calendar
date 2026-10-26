@@ -38,6 +38,32 @@ const cases = [
     {name: 'removed prop in code', expect: ['no-removed-api-as-usable'], edits: both('docs/migration-0.1-to-0.2.md', 'docs/migration-0.1-to-0.2.ru.md')
         .map(path => replace(path, '<Calendar items={items} timeZone=', '<Calendar items={items} utcOffset="+03:00" timeZone='))},
     {name: 'stale version', expect: ['version-and-status', 'prerelease-guides'], edits: [replace('package.json', '"version": "0.2.0-alpha.2"', '"version": "0.2.0-alpha.3"')]},
+    // The release PR: the shipped README and CHANGELOG describe the published prerelease (npm versions are immutable).
+    // Each "unpublished" mutation keeps the version, `next` and `latest` spans in place, so only the wording rule can fail it.
+    {name: 'published prerelease described as unpublished', expect: ['version-and-status'], edits: [replace('README.md',
+        '**`0.2.0-alpha.2` is a prerelease, published on npm under the `next` dist-tag; `latest` remains `0.1.1`.**',
+        '**`0.2.0-alpha.2` is a candidate for the `next` dist-tag: unpublished; `latest` remains `0.1.1`.**')]},
+    {name: 'known limitation says the prerelease is not on npm', expect: ['version-and-status'],
+        edits: [replace('README.md', '- **Prerelease on the `next` dist-tag.**', '- **Not yet on npm.**')]},
+    {name: 'migration guide says the prerelease is not on the registry', expect: ['version-and-status'], edits: [replace('docs/migration-0.1-to-0.2.md',
+        '`0.2.0-alpha.2` is published under the npm dist-tag `next`', '`0.2.0-alpha.2` is not on the registry yet; it goes to the npm dist-tag `next`')]},
+    {name: 'English example README installs only before publication', expect: ['version-and-status'],
+        edits: [replace('examples/vite/README.md', '### From this checkout: a locally packed archive', '### Before publication: a locally packed archive')]},
+    {name: 'prerelease install not pinned', expect: ['version-and-status'], edits: both('README.md', 'README.ru.md')
+        .map(path => replace(path, 'npm install @nelmad/calendar@0.2.0-alpha.2 --save-exact\n```', 'npm install @nelmad/calendar@0.2.0-alpha.2\n```'))},
+    {name: 'install without the dist-tags', expect: ['version-and-status'], edits: [replace('README.md',
+        '`0.2.0-alpha.2` is published on npm under the `next` dist-tag, while `latest` remains `0.1.1`: a plain', '`0.2.0-alpha.2` is published on npm: a plain')]},
+    {name: 'install without the latest dist-tag', expect: ['version-and-status'], edits: [replace('README.md',
+        'while `latest` remains `0.1.1`: a plain', 'while the default tag remains `0.1.1`: a plain')]},
+    // Each half of the `next` condition on its own: only the `next` span goes, `latest` stays.
+    {name: 'status without the next dist-tag', expect: ['version-and-status'], edits: [replace('README.md',
+        'published on npm under the `next` dist-tag; `latest` remains', 'published on npm under a prerelease dist-tag; `latest` remains')]},
+    {name: 'install without the next dist-tag', expect: ['version-and-status'], edits: [replace('README.ru.md',
+        'опубликован в npm под dist-tag `next`, а `latest`', 'опубликован в npm под отдельным dist-tag, а `latest`')]},
+    {name: 'install without the saved caret range', expect: ['version-and-status'], edits: [replace('README.ru.md', 'caret-диапазон `^0.2.0-alpha.2`', 'caret-диапазон')]},
+    {name: 'example README installs only before publication', expect: ['version-and-status'],
+        edits: [replace('examples/next/README.ru.md', '### Из этого checkout: локально собранный архив', '### До публикации: локально собранный архив')]},
+    {name: 'undated changelog entry', expect: ['version-and-status'], edits: [replace('CHANGELOG.md', '## [0.2.0-alpha.2] - 2026-10-26', '## [0.2.0-alpha.2] - Unreleased')]},
     {name: 'diverging Next.js workspace', expect: ['tested-code-blocks'], edits: [replace('examples/next/components/Workspace.tsx', "'use client';", "'use client';\n")]},
     {name: 'limitations without az-Arab', expect: ['prerelease-guides'], edits: [replace('README.ru.md', '`az`, `az-Arab`, `bs`', '`az`, `bs`')]},
     {name: 'no allowed/not-allowed slot example', expect: ['prerelease-guides'], edits: both('docs/api.md', 'docs/api.ru.md').map(path => replace(path, '// Not allowed: links', '// Avoid: links'))},

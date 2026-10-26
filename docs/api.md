@@ -5,7 +5,7 @@
 <a id="overview"></a>
 ## Overview
 
-This reference describes exactly the public surface of the `0.2.0-alpha.2` candidate: the root entry `@nelmad/calendar`
+This reference describes exactly the public surface of the `0.2.0-alpha.2` prerelease: the root entry `@nelmad/calendar`
 and the stylesheet `@nelmad/calendar/styles.css`. The [generated API report](api/calendar.api.md), produced by API
 Extractor from the published `dist/index.d.ts`, is the exact declaration text; this page explains behavior, defaults and
 validation.

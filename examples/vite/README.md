@@ -15,7 +15,13 @@ only: the package root and `@nelmad/calendar/styles.css`.
 
 Node.js 22 or newer.
 
-### Before publication: a locally packed archive
+In your own project, install the published prerelease from npm instead of this example's archive:
+`npm install @nelmad/calendar@0.2.0-alpha.2 --save-exact` (see [Install](../../README.md#install)).
+
+### From this checkout: a locally packed archive
+
+This example depends on `file:../calendar.tgz`, an archive of the checkout, so it runs the code of this commit, including
+changes that are not released yet. CI qualifies it the same way.
 
 ```sh
 # In the repository root
@@ -38,14 +44,16 @@ holds the hash of the last qualified archive, and npm may install that cached co
 `npm run dev` starts the Vite dev server without SSR: the client renders the demo itself and shows the initial loading
 state before the first range arrives.
 
-### After publication: the registry version
+### Against the published version
 
 ```sh
-npm install @nelmad/calendar@0.2.0-alpha.2
+npm install @nelmad/calendar@0.2.0-alpha.2 --save-exact
 npm run build && npm start
 ```
 
-This replaces the `file:../calendar.tgz` dependency. The version is not published yet; use the archive until it is.
+This replaces the `file:../calendar.tgz` dependency with the version from npm. `0.2.0-alpha.2` is on the `next`
+dist-tag (`latest` remains `0.1.1`); `--save-exact` keeps npm from saving `^0.2.0-alpha.2`, a range that also accepts
+later `0.2.0` prereleases.
 
 ## What the demo covers
 
@@ -103,8 +111,7 @@ popover agenda; on a phone, or whenever the calendar's own content box is narrow
 672 px for the root with its default 16 px padding), it is the compact mobile month with the agenda of the viewed day below
 it. Item actions, sources, `neutralTheme`, slots and `portalContainer` are shown on `/workspace`. Selection, creation and
 moving items are planned for `0.2.0-beta.1`. Props outside the current slice are typed as unavailable and ignored at
-runtime with a development warning. The package is not published yet and has no screen-reader or physical-device
-certification.
+runtime with a development warning. The package has no screen-reader or physical-device certification.
 
 ## Package qualification
 

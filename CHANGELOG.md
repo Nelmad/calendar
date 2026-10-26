@@ -5,11 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.0-alpha.2] - Unreleased
+## [0.2.0-alpha.2] - 2026-10-26
 
-Built on top of `0.2.0-alpha.1`: the responsive and integration slice. It is released only after the alpha.2 acceptance
-passes in CI on the packed archive in Vite with React 18 and Next.js with React 19. Selection, creation, moving items and
-`interactionPolicy` remain planned for `0.2.0-beta.1`.
+The first `0.2` prerelease published to npm. It is on the `next` dist-tag and `latest` stays `0.1.1`, so a plain
+`npm install @nelmad/calendar` still installs 0.1. Install this version by its exact number and pin it: npm otherwise
+saves the caret range `^0.2.0-alpha.2`, which also accepts later `0.2.0` prereleases. The API may still change before
+`0.2.0`.
+
+```sh
+npm install @nelmad/calendar@0.2.0-alpha.2 --save-exact
+```
+
+**Breaking.** `0.2` replaces 0.1 and has no compatibility layer: `events`, `utcOffset`, the 0.1 callbacks and helpers,
+palettes, labels, the theme object, `CalendarSkeleton`, `@nelmad/calendar/tokens.css` and Day.js are removed, and
+`Calendar` takes ISO `items` with an explicit IANA `timeZone`. See the
+[migration guide](https://github.com/Nelmad/calendar/blob/main/docs/migration-0.1-to-0.2.md).
+
+**Requirements.** Node.js 22 or newer (0.1.1: 18 or newer). `react` and `react-dom` `^18.2.0 || ^19.0.0` as a
+matching pair (0.1.1: any version from 18), so React 18.0 and 18.1 are no longer supported. `dayjs`,
+`react-aria-components` and `@react-aria/interactions` are no longer peer dependencies: the date and accessibility
+libraries are ordinary dependencies.
+
+**0.2.0-alpha.1 was not published.** It was an internal candidate, and this release includes all of its changes,
+listed under `0.2.0-alpha.1` in the [changelog](https://github.com/Nelmad/calendar/blob/main/CHANGELOG.md): the new
+`Calendar` with the desktop Month view and its day agenda, controlled navigation and visible-range loading, data states,
+validation and diagnostics, `ru-RU` and `en-US` messages, `classicTheme` with tokens, and the removal of the 0.1 API.
+The lists below are what this release adds on top of it, the responsive and integration slice; where an entry compares
+with alpha.1, it compares with that unpublished candidate. CI runs the alpha.2 acceptance on the packed archive in a
+Vite app with React 18 and a Next.js app with React 19. Selection, creation, moving items and `interactionPolicy` are
+planned for `0.2.0-beta.1`.
 
 ### Added
 
@@ -69,7 +93,7 @@ passes in CI on the packed archive in Vite with React 18 and Next.js with React 
   `data-presentation`, and source menu items and checkboxes no longer carry React Aria's `data-selected`. Agenda rows
   and Month items have an accent marker at their inline start.
 - The day agenda popover and sheet are no longer rendered inside the calendar root but in the owner document `body`
-  (alpha.1 rendered the popover inside the root). A calendar inside a `ShadowRoot` must now also load
+  (the unpublished alpha.1 rendered the popover inside the root). A calendar inside a `ShadowRoot` must now also load
   `@nelmad/calendar/styles.css` in the document, or pass a `portalContainer` inside a styled tree scope.
 - Inside a host modal window the default portal target is the open modal container around the calendar (a `<dialog>`
   shown with `showModal()`, or an element with `aria-modal="true"`), re-resolved on every date activation; an explicit
@@ -289,9 +313,10 @@ passes in CI on the packed archive in Vite with React 18 and Next.js with React 
   string forms such as `image-set("…")` are passed to CSS. The SSR locale limitation now describes the Node/Chrome Intl
   data gap beyond `az-Arab`.
 
-## [0.2.0-alpha.1] - Unreleased
+## [0.2.0-alpha.1] - not published
 
-Breaking replacement of 0.1. No compatibility layer; see the [migration guide](docs/migration-0.1-to-0.2.md).
+An internal candidate that was not published to npm; its changes ship in `0.2.0-alpha.2`. Breaking replacement of 0.1.
+No compatibility layer; see the [migration guide](docs/migration-0.1-to-0.2.md).
 
 ### Added
 
@@ -325,8 +350,8 @@ Breaking replacement of 0.1. No compatibility layer; see the [migration guide](d
   `buildWeekLayout`, `formatEventTime`, labels, palettes, the old theme object and `@nelmad/calendar/tokens.css`.
 - Day.js.
 
-This candidate is not published. Responsive and mobile layouts, actions, sources, `neutralTheme`, render slots and class
-callbacks are planned for `0.2.0-alpha.2`; selection, creation and moving items for `0.2.0-beta.1`.
+`0.2.0-alpha.2`, the first published `0.2` prerelease, adds responsive and mobile layouts, actions, sources,
+`neutralTheme`, render slots and class callbacks; selection, creation and moving items are planned for `0.2.0-beta.1`.
 
 ## [0.1.1] - 2026-10-12
 

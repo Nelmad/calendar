@@ -245,15 +245,35 @@ check('tested-code-blocks', fail => {
     const tsc = spawnSync(process.execPath, [at('node_modules/typescript/bin/tsc'), '-p', at('examples/migration/tsconfig.json')], {encoding: 'utf8'});
     if (tsc.status !== 0) fail(`examples/migration does not type-check against dist/index.d.ts:\n${tsc.stdout}${tsc.stderr}`);
 });
+// The version in package.json is the one the Release workflow publishes, and npm versions are immutable (RELEASING.md):
+// the shipped README describes it as published. A prerelease is on the `next` dist-tag, so it is installed by its exact
+// version and pinned, because the caret range npm saves by default also accepts later prereleases of the same version.
+const prerelease = api.version.includes('-');
+const exampleReadmes = ['vite', 'next'].flatMap(kind => [`examples/${kind}/README.md`, `examples/${kind}/README.ru.md`]);
+const unpublished = /\bunpublished\b|\bnot (?:yet )?(?:published|on npm|on the registry)\b|\b(?:before|after|until) publication\b|не опубликован|неопубликован|нет в npm|в registry этой версии|до публикации|после публикации/i;
 check('version-and-status', fail => {
     for (const path of [pairs[0].en, pairs[0].ru]) {
-        if (!parsed[path].text.includes(`npm install @nelmad/calendar@${api.version}`)) fail(`${path}: install command must name ${api.version}`);
-        const status = parsed[path].spans.filter(span => span.section === 'status').map(span => span.code);
+        const doc = parsed[path];
+        if (!doc.text.includes(`npm install @nelmad/calendar@${api.version}`)) fail(`${path}: install command must name ${api.version}`);
+        const status = doc.spans.filter(span => span.section === 'status').map(span => span.code);
         if (!status.includes(api.version)) fail(`${path}: #status must name ${api.version}`);
+        if (!prerelease) continue;
+        const install = doc.spans.filter(span => span.section === 'install').map(span => span.code);
+        const pinned = `npm install @nelmad/calendar@${api.version} --save-exact`;
+        if (!doc.blocks.some(block => block.section === 'install' && block.code.split('\n').includes(pinned))) fail(`${path}: #install must pin the prerelease with \`${pinned}\``);
+        if (!status.includes('next') || !install.includes('next')) fail(`${path}: #status and #install must name the \`next\` dist-tag of ${api.version}`);
+        if (!install.includes('latest')) fail(`${path}: #install must say what \`latest\` installs instead of ${api.version}`);
+        if (!install.includes(`^${api.version}`)) fail(`${path}: #install must explain the caret range ^${api.version} that npm saves without --save-exact`);
     }
+    for (const path of [...docs, ...exampleReadmes]) read(path).split('\n').forEach((line, index) => {
+        if (unpublished.test(line)) fail(`${path}:${index + 1}: ${api.version} is the published version; do not describe it as unpublished or as installable only from an archive`);
+    });
     for (const path of [pairs[1].en, pairs[1].ru]) if (!parsed[path].lines[0].includes(api.version)) fail(`${path}: title must name ${api.version}`);
     const changelog = read('CHANGELOG.md');
-    if (!changelog.includes(`## [${api.version}]`)) fail(`CHANGELOG.md has no ${api.version} entry`);
+    const heading = changelog.split('\n').find(line => line.startsWith(`## [${api.version}]`));
+    if (!heading) fail(`CHANGELOG.md has no ${api.version} entry`);
+    // RELEASING.md step 1: the release moves its entry from "Unreleased" to a dated heading.
+    else if (!/^## \[[^\]]+\] - \d{4}-\d{2}-\d{2}$/.test(heading)) fail(`CHANGELOG.md: "${heading}" must be dated: ## [${api.version}] - YYYY-MM-DD`);
 });
 // alpha.2 (T19): the prerelease limitations, the integrations example and the §10.4 allowed/not-allowed slot examples.
 check('prerelease-guides', fail => {

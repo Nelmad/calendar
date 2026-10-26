@@ -15,7 +15,8 @@ actions, controlled sources, localization, `classicTheme` and `neutralTheme`, it
 <a id="checklist"></a>
 ## Checklist
 
-1. Install the new version and remove calendar-only peers ([Dependencies](#dependencies)).
+1. Check the Node.js and React requirements, install the new version by its exact number and remove calendar-only peers
+   ([Dependencies](#dependencies)).
 2. Convert `events` to `items` with domain fields in `data` ([Events to items](#items)).
 3. Choose an explicit IANA `timeZone` ([Time zone](#time-zone)) and resolve offset-less timestamps ([Offset-less
    timestamps](#offset-less)).
@@ -30,9 +31,22 @@ actions, controlled sources, localization, `classicTheme` and `neutralTheme`, it
 
 0.1 asked the application to install `dayjs`, `react-aria-components` and `@react-aria/interactions` next to the calendar.
 `0.2` has only `react` and `react-dom` as peers (`^18.2.0 || ^19.0.0`) and ships its date and accessibility libraries as
-ordinary dependencies; Day.js is not used at all. Remove those packages unless your application uses them itself, and
-install the calendar as described in the [README](../README.md#install). Day.js locale imports no longer configure the
-calendar: use `locale`.
+ordinary dependencies; Day.js is not used at all. Remove those packages unless your application uses them itself.
+Day.js locale imports no longer configure the calendar: use `locale`.
+
+The requirements are stricter than in `0.1.1`:
+
+| | `0.1.1` | `0.2` |
+| --- | --- | --- |
+| Node.js (`engines`) | 18 or newer | 22 or newer |
+| `react`, `react-dom` | any version from 18 | `^18.2.0 \|\| ^19.0.0`, one matching pair |
+
+React 18.0 and 18.1 are no longer supported, and neither are `react` and `react-dom` of different versions: upgrade both
+together before installing `0.2`.
+
+`0.2.0-alpha.2` is published under the npm dist-tag `next`, and `latest` still points to `0.1.1`, so a plain install keeps
+0.1. Install the calendar by its exact version as described in the [README](../README.md#install), with `--save-exact`
+so that a later `0.2.0` prerelease is never picked up without your review.
 
 <a id="items"></a>
 ## Events to items
