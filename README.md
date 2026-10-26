@@ -27,8 +27,8 @@ Contents: [Install](#install) · [Quick start](#quick-start) · [Styles and the 
 ## Install
 
 Requirements: React and ReactDOM `^18.2.0 || ^19.0.0` (one matching pair) and Node.js 22 or newer for SSR and builds.
-`0.1.1` accepted any React from 18 and Node.js 18. The date and accessibility libraries are ordinary dependencies:
-nothing else needs to be installed, and Day.js is not used.
+`0.1.1` accepted any React from 18 and Node.js 18 or newer. The date and accessibility libraries are ordinary
+dependencies: nothing else needs to be installed, and Day.js is not used.
 
 `0.2.0-alpha.2` is published on npm under the `next` dist-tag, while `latest` remains `0.1.1`: a plain
 `npm install @nelmad/calendar` still installs 0.1. Install the prerelease by its exact version and pin it:
@@ -621,7 +621,7 @@ typed as unavailable).
 ## Migrating from 0.1
 
 `0.2` is a breaking release without compatibility adapters. It needs Node.js 22 or newer and a matching React/ReactDOM
-pair `^18.2.0 || ^19.0.0` (0.1 accepted Node.js 18 and any React from 18). In short: `events` become `items` with domain
+pair `^18.2.0 || ^19.0.0` (0.1 accepted Node.js 18 or newer and any React from 18). In short: `events` become `items` with domain
 fields in `data`; choose an IANA `timeZone` instead of `utcOffset`/`timezone`; convert inclusive all-day ends to exclusive ones (dates 3–4
 September become `[2026-09-03, 2026-09-05)`, a missing end means one day); keep timed instants, noting that an end at
 midnight no longer occupies the next day; replace `onEventPress` with `onItemPress` and `isFetching`/`CalendarSkeleton`
