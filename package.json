@@ -106,6 +106,15 @@
     "vite-plugin-dts": "^5.0.2",
     "vitest": "^3.2.1"
   },
+  "//": "overrides close dev-only advisories inside Storybook 8 and Vitest 3: the actions addon calls only uuid.v4(), and the only breaking change of tinypool 2 is dropping Node 18.",
+  "overrides": {
+    "@storybook/addon-actions": {
+      "uuid": "11.1.1"
+    },
+    "vitest": {
+      "tinypool": "2.1.2"
+    }
+  },
   "keywords": [
     "react",
     "calendar",
