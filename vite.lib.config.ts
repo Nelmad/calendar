@@ -1,6 +1,6 @@
 import {dirname, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {readFileSync} from 'node:fs';
+import {readFileSync, rmSync} from 'node:fs';
 import react from '@vitejs/plugin-react';
 import {defineConfig} from 'vite';
 import dts from 'vite-plugin-dts';
@@ -32,6 +32,9 @@ export default defineConfig({
             exclude: ['src/**/__tests__/**', 'src/**/*.test.ts', 'src/**/*.test.tsx'],
             tsconfigPath: './tsconfig.build.json',
             bundleTypes: true,
+            // The plugin bundles declarations for every lib entry. The Calendar entry exists only for the JS client
+            // boundary; its Calendar.d.ts would be a second copy of the public types that no types condition names.
+            afterBuild: () => rmSync(resolve(rootDir, 'dist/Calendar.d.ts')),
         }),
     ],
     build: {

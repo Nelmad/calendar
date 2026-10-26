@@ -122,7 +122,7 @@ function DataMonth<I, S>({controller, model, headingId, onDateActivate, popup, o
                             const context: CalendarMonthItemSlotContext<I, S> = {item, ...(source ? {source} : {}), view: 'month', segmentRange: segment.segmentRange,
                                 isSelected: !!props.selection && props.selection.start < segment.segmentRange.end && segment.segmentRange.start < props.selection.end,
                                 isDragging: false,
-                                // §5.7: a month segment offers only the primary press (actions live in the agenda; move joins in T23).
+                                // §5.7: a month segment offers only the primary press (actions live in the agenda; item moves come in a later prerelease).
                                 isPending: false, isDisabled: !props.onItemPress};
                             return <div key={`${item.id}/${segment.segmentRange.start}`} data-item-id={item.id} data-view="month" data-selected={context.isSelected || undefined}
                                 data-continues-before={segment.continuesBefore || undefined} data-continues-after={segment.continuesAfter || undefined}

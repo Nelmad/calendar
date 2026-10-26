@@ -234,7 +234,7 @@ export function useCalendarController<I, S>(input: CalendarProps<I, S>, surface?
             if (target) navigate(clampToMonth(state.date, target), 'grid', undefined, 'month');
         },
         navigateToday: () => { if (today) navigate(today, 'today', todayRef.current ?? undefined); },
-        // T12 owns controlled agenda request/open acknowledgement; this is only its uncontrolled storage.
+        // The agenda owner (CalendarMonth) handles controlled agenda requests and open acknowledgement; this is only its uncontrolled storage.
         setUncontrolledAgendaDate: (date: string) => {
             if (currentAgenda && !currentAgenda.controlled && !model.blocking && (currentAgenda.date !== date || currentAgenda.untouched)) setAgenda({...currentAgenda, date, untouched: false});
         },

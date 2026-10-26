@@ -1,16 +1,26 @@
 import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
 import {readFileSync, readdirSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import {resolve, relative} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createElement} from 'react';
 import {renderToString} from 'react-dom/server';
+import Input from 'postcss/lib/input';
+import tokenize from 'postcss/lib/tokenize';
 import ts from 'typescript';
+import {transformWithEsbuild} from 'vite';
 
 const root = resolve(import.meta.dirname, '..'), dist = resolve(root, 'dist');
 const manifest = JSON.parse(readFileSync(resolve(root, 'package.json')));
 const read = path => readFileSync(resolve(dist, path), 'utf8');
 const paths = readdirSync(dist, {recursive: true}).filter(path => /\.(?:js|cjs|css|ts|cts)$/.test(path));
+// Every file npm publishes, learned as scripts/check-pack.mjs does (without lifecycle scripts, so no build reruns).
+const [pack] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {cwd: root, encoding: 'utf8'}));
+const published = pack.files.map(file => file.path).sort();
+// Internal task (T23), QA (QA-19, QA-D-1-05) and review (review 2026-10-09-3) IDs stay in the sources. A T and two digits
+// before a colon and a digit is the time of an ISO date-time (`${date}T00:00:00Z`), not a task.
+const internalNote = /\bT\d{2}\b(?!:\d)|\bQA-[A-Z0-9]|\b[Rr]eview 20\d\d-\d\d/;
 const publicValues = ['Calendar', 'classicTheme', 'getCalendarVisibleRange', 'neutralTheme']; // alpha.2 with T18.
 // Independent copy of the alpha.2 working slice (src/v02/surface.ts); a milestone changes both deliberately.
 const acceptedProps = ['items', 'timeZone', 'anchorDate', 'onNavigate', 'onVisibleRangeChange', 'today', 'locale', 'firstDayOfWeek', 'hourCycle', 'dir',
@@ -93,7 +103,7 @@ export type RequiredLayout = undefined extends P['layout'] ? 'optional' : 'requi
     const source = read('index.d.ts');
     assert.match(source, /declare const neutralTheme: CalendarTheme;/, 'neutralTheme is an opaque preset (T18)');
     // Editor hovers show these comments: internal task and review notes stay in the sources (review 2026-10-09-1).
-    assert.doesNotMatch(source, /Private until|\bT\d{2}\b|\bQA-[A-Z0-9]|\breview 20\d\d-/, 'Published declarations carry no internal task notes');
+    assert.doesNotMatch(source, new RegExp(`Private until|${internalNote.source}`), 'Published declarations carry no internal task notes');
 }
 for (const extension of ['js', 'cjs']) {
     assert.match(read(`Calendar.client.${extension}`), /^['"]use client['"];/);
@@ -107,6 +117,25 @@ assert.match(css, /--nelmad-calendar-color-surface/);
 assert.match(css, /\.nc-agenda-popover/);
 assert.doesNotMatch(css, /@import|url\s*\(|--tc-/i);
 assert.deepEqual(paths.filter(path => path.endsWith('.css')), ['styles.css']);
+// The comments of src/v02/styles.css are maintainer notes: the published copy has none (PostCSS tokens, so strings and
+// url() are not mistaken for one) and the same rules (equal esbuild minifications, legal comments dropped from both).
+{
+    const tokens = tokenize(new Input(css)), comments = [];
+    while (!tokens.endOfFile()) { const token = tokens.nextToken(); if (token?.[0] === 'comment') comments.push(token[1].slice(0, 80)); }
+    assert.deepEqual(comments, [], 'dist/styles.css carries no comments');
+    const minified = async source => (await transformWithEsbuild(source, 'styles.css', {minify: true, legalComments: 'none'})).code;
+    assert.equal(await minified(css), await minified(readFileSync(resolve(root, 'src/v02/styles.css'), 'utf8')), 'dist/styles.css keeps the rules of src/v02/styles.css');
+}
+// The package holds exactly the declarations package.json references (types and the types conditions of exports).
+const typeTargets = value => typeof value === 'string' ? (/\.d\.[cm]?ts$/.test(value) ? [value] : [])
+    : Object.values(value ?? {}).flatMap(typeTargets);
+const declarations = [...new Set([manifest.types, ...typeTargets(manifest.exports)].map(path => path.replace(/^\.\//, '')))].sort();
+assert.deepEqual(published.filter(path => /\.d\.[cm]?ts$/.test(path)), declarations, 'Only referenced declarations are published');
+assert.deepEqual(declarations, ['dist/index.d.cts', 'dist/index.d.ts']);
+// No published file (code, declarations, styles, docs, package.json) names an internal task, QA or review note.
+const notes = published.flatMap(path => readFileSync(resolve(root, path), 'utf8').split('\n')
+    .flatMap((line, index) => internalNote.test(line) ? [`${path}:${index + 1}: ${line.trim().slice(0, 120)}`] : []));
+assert.deepEqual(notes, [], 'Published files carry no internal task, QA or review notes');
 // The surface gate names the removed 0.1 props to point at the migration guide; that one array literal is the only
 // place where a legacy name may appear.
 const removedProps = new RegExp(String.raw`\[\s*` + ['events', 'utcOffset', 'timezone', 'onEventPress', 'onEventEdit', 'onEventDelete', 'palette', 'overdueColor',

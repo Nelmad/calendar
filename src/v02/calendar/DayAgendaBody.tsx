@@ -28,7 +28,7 @@ function AgendaRow<I, S>({model, entry, index, id, date}: {model: CalendarDataMo
     const props = model.props, {item, source, title, interval} = entry.record, appearance = model.appearance.resolve(entry.record);
     const context: CalendarAgendaItemSlotContext<I, S> = {item, ...(source ? {source} : {}), view: 'agenda', date,
         isSelected: !!props.selection && date >= props.selection.start && date < props.selection.end, isDragging: false,
-        // §5.7: no primary and no action operation for this row (move joins in T23).
+        // §5.7: no primary and no action operation for this row (item moves come in a later prerelease).
         isPending: false, isDisabled: !props.onItemPress && !model.actions.resolve(item).actions.length};
     const times = interval.kind === 'allDay' ? model.format.range(interval) : model.format.timedRange(interval.start, interval.end);
     const summary = <><span className="nc-agenda-title">{item.title.trim().length > 0 ? <bdi dir="auto">{title}</bdi> : <LocalizedText value={model.message('untitledItemLabel')}/>}</span>
