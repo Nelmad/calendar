@@ -152,7 +152,8 @@ try {
         const files = readdirSync(join(extract, 'package'), {recursive: true, withFileTypes: true}).filter(entry => entry.isFile())
             .map(entry => join(entry.parentPath, entry.name).slice(join(extract, 'package').length + 1)).sort();
         assert.deepEqual(files, [...details.files].sort());
-        const offending = files.filter(file => /dayjs/i.test(file) || /dayjs/i.test(readFileSync(join(extract, 'package', file), 'utf8')));
+        // Code, declarations, styles and package.json must not mention Day.js; the docs may name the removed 0.1 peer.
+        const offending = files.filter(file => /dayjs/i.test(file) || !/\.md$/.test(file) && /dayjs/i.test(readFileSync(join(extract, 'package', file), 'utf8')));
         assert.deepEqual(offending, [], 'Day.js in package files, imports or declarations');
         assert.ok(files.includes('dist/styles.css') && !files.some(file => /tokens\.css$/.test(file)), 'only styles.css is shipped');
         const exports = JSON.parse(readFileSync(join(extract, 'package/package.json'), 'utf8')).exports;
