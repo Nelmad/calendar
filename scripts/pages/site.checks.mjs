@@ -185,6 +185,12 @@ test('pages.yml: least privilege, no untrusted event fields in run lines, deploy
     assert.match(workflow, /node --test scripts\/pages\/\*\.checks\.mjs/);
 });
 
+test('pages.yml pins every action by its full commit SHA with the release in a comment', () => {
+    const uses = [...read('.github/workflows/pages.yml').matchAll(/^ +(?:- )?uses: (.*)$/gm)].map(match => match[1]);
+    assert.ok(uses.length, 'pages.yml uses actions');
+    for (const action of uses) assert.match(action, /^[\w.-]+\/[\w.-]+@[0-9a-f]{40} # v\d+\.\d+\.\d+$/, action);
+});
+
 test('pages.yml redeploys main after each successful Release run, whose tag and GitHub Release start no workflow', () => {
     const workflow = read('.github/workflows/pages.yml');
     const on = workflow.slice(workflow.indexOf('\non:\n'), workflow.indexOf('\npermissions:'));

@@ -123,3 +123,10 @@ test('CI runs every gate on pull requests and pushes to main with a read-only to
     assert.doesNotMatch(workflow, /gate\.mjs|release-metadata\.mjs|--verify-checkout/);
     assert.ok(!existsSync(join(root, 'scripts/release/gate.mjs')));
 });
+
+test('CI pins every action by its full commit SHA with the release in a comment, and Dependabot keeps the pins current', () => {
+    const uses = [...read('.github/workflows/ci.yml').matchAll(/^ +(?:- )?uses: (.*)$/gm)].map(match => match[1]);
+    assert.ok(uses.length, 'ci.yml uses actions');
+    for (const action of uses) assert.match(action, /^[\w.-]+\/[\w.-]+@[0-9a-f]{40} # v\d+\.\d+\.\d+$/, action);
+    assert.match(read('.github/dependabot.yml'), /\n {2}- package-ecosystem: github-actions\n {4}directory: \/\n/);
+});

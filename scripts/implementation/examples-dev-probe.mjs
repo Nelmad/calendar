@@ -53,12 +53,13 @@ async function open(path, kind) {
     });
     const {html, prefetch} = routes[path];
     await page.setContent(`<!doctype html><html lang="ru"><head><meta name="viewport" content="width=device-width, initial-scale=1"><style>${css}</style></head><body><div id="app">${html}</div></body></html>`);
-    const recoverable = await page.evaluate(async ({moduleUrl, path, prefetch}) => {
+    await page.evaluate(async ({moduleUrl, path, prefetch}) => {
         const module = await import(moduleUrl);
-        return module.hydrateExample(document.getElementById('app'), path, prefetch ?? undefined);
+        window.recoverable = module.hydrateExample(document.getElementById('app'), path, prefetch ?? undefined);
     }, {moduleUrl, path, prefetch: prefetch ?? null});
-    await settle(page);
-    return {context, page, recoverable};
+    // hydrateRoot only schedules hydration, so the errors array is read live, never before the commit has set the flag.
+    await page.locator('html[data-hydrated=true]').waitFor({state: 'attached'}); await settle(page);
+    return {context, page, recoverable: () => page.evaluate(() => window.recoverable)};
 }
 const rootName = locator => locator.evaluate(node => [node.getAttribute('aria-label'), node.getAttribute('aria-labelledby')]);
 const inShadow = locator => locator.evaluate(node => node.getRootNode() instanceof ShadowRoot);
@@ -70,13 +71,13 @@ try {
         await page.locator('[role=gridcell][data-date="2026-09-03"]').focus(); await page.keyboard.press('Enter'); await page.getByRole('dialog').waitFor();
         await page.keyboard.press('Escape'); await page.getByRole('dialog').waitFor({state: 'hidden'});
         await page.screenshot({path: resolve(output, 'desktop-release-demo.png')});
-        assert.deepEqual(recoverable, []); await context.close();
+        assert.deepEqual(await recoverable(), []); await context.close();
     });
     await check('desktop-quick-start', async () => {
         const {context, page, recoverable} = await open('/quick-start', 'desktop');
         await page.locator('.nc-month-item[data-item-id=standup]').click();
         assert.equal(await page.locator('#opened').innerText(), 'Стендап: 301');
-        assert.deepEqual(recoverable, []); await context.close();
+        assert.deepEqual(await recoverable(), []); await context.close();
     });
     await check('desktop-workspace-document-and-shadow-root', async () => {
         const {context, page, recoverable} = await open('/workspace', 'desktop');
@@ -102,7 +103,7 @@ try {
         names.back = await rootName(page.locator('.nc-calendar'));
         assert.deepEqual(names, {document: ['Календарь', 'workspace-title'], shadow: ['Рабочее пространство', null], back: ['Календарь', 'workspace-title']},
             'the calendar keeps the page name in both tree scopes');
-        assert.deepEqual(recoverable, []); await context.close();
+        assert.deepEqual(await recoverable(), []); await context.close();
         return {names};
     });
     await check('phone-workspace-sheet-and-shadow-root', async () => {
@@ -119,7 +120,7 @@ try {
         assert.equal(await inShadow(sheet), true, 'the sheet is portaled into the ShadowRoot');
         await page.screenshot({path: resolve(output, 'phone-workspace-shadow-sheet.png')});
         await page.keyboard.press('Escape'); await sheet.waitFor({state: 'detached'});
-        assert.deepEqual(recoverable, []); await context.close();
+        assert.deepEqual(await recoverable(), []); await context.close();
         return {name};
     });
 } finally { await browser.close(); }

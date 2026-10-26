@@ -13,9 +13,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 22
           cache: npm
@@ -60,14 +60,13 @@ jobs:
   # One npm pack per run: the packed consumers and the milestone acceptance (SSR, hydration, keyboard, axe) test that file,
   # and each first requires it to be byte-identical to the checkout's build.
   packed-consumers:
-    # Ubuntu 24.04, not -latest: Playwright 1.55 (the spikes pin) refuses to install on Ubuntu 26.04 (no ffmpeg build for it).
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
           cache: npm
@@ -93,7 +92,7 @@ jobs:
       - run: node scripts/implementation/alpha-acceptance.mjs --milestone="$MILESTONE" --tarball="$TARBALL" --output="$RUNNER_TEMP/packed-consumers/milestone-acceptance"
         env:
           MILESTONE: ${{ steps.archive.outputs.milestone }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: packed-consumers
@@ -101,14 +100,13 @@ jobs:
 
   # The Chrome probes of the checkout sources and the Storybook smoke on every pull request.
   browser-probes:
-    # Ubuntu 24.04: see packed-consumers.
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
           cache: npm
@@ -119,7 +117,7 @@ jobs:
       - run: npm run build
       - run: npm run build-storybook -- --disable-telemetry
       - run: node scripts/implementation/browser-probes.mjs --output="$RUNNER_TEMP/browser-probes"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: browser-probes

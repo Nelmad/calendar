@@ -161,7 +161,7 @@ await check('Emulated touch capture survives sheet unmount with touch-action est
 await page.screenshot({path: new URL('browser.png', output).pathname, fullPage: true});
 await context.tracing.stop({path: new URL('browser-trace.zip', output).pathname});
 const report = {date: new Date().toISOString(), browser: await browser.version(), platform: process.platform,
-    shadowDOM, flagPackage: '@react-stately/flags@3.2.1', automation: 'playwright@1.55.1', viewport: {width: 1000, height: 800}, realDevice: false,
+    shadowDOM, flagPackage: '@react-stately/flags@3.2.1', automation: 'playwright@1.64.1', viewport: {width: 1000, height: 800}, realDevice: false,
     sourceHashes: Object.fromEntries(['surface.jsx', 'main.jsx', 'styles.css', 'browser.mjs', 'package-lock.json'].map(name => [name, createHash('sha256').update(readFileSync(new URL(name, import.meta.url))).digest('hex')])),
     cases, errors, outcome: cases.every(c => c.outcome === 'pass') && !errors.length ? 'pass' : 'fail'};
 writeFileSync(new URL('browser.json', output), JSON.stringify(report, null, 2) + '\n');

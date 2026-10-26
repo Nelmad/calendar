@@ -75,7 +75,7 @@ writeFileSync(join(evidence, 'bundle-consumer-lock.json'), JSON.stringify(instal
 writeFileSync(join(evidence, 'bundle-install.txt'), installLog);
 const report = {date: new Date().toISOString(), kind: 'feasibility-only',
     limitation: 'Small RAC/date surface, not full Calendar: no second theme, full DnD, timezone accepted-set or complete a11y implementation. This cannot pass the release size gate.',
-    node: process.version, vite: '6.4.3', target: 'es2020', minifier: 'esbuild', gzipLevel: 9, runtimePins,
+    node: process.version, vite: '6.4.4', target: 'es2020', minifier: 'esbuild', gzipLevel: 9, runtimePins,
     externals: 'Only React/ReactDOM and all their subpaths',
     packed: {name: packed.name, version: packed.version, integrity: packed.integrity, sha256: sha(readFileSync(tgz)), files: packed.files},
     baseline, probe, delta: {js: probe.js - baseline.js, css: probe.css - baseline.css},

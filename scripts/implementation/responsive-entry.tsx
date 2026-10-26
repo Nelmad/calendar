@@ -42,6 +42,7 @@ export async function hydrateSuspense(container: Element, options: Options = {},
     function Loaded() { useEffect(() => hydrated(), []); return 'loaded'; }
     const Slow = lazy(() => new Promise<{default: () => ReactNode}>(done => setTimeout(() => done({default: Loaded}), delay)));
     const root = hydrateRoot(container, suspended(<Calendar {...fixture.props}/>, <Slow/>), {onRecoverableError: error => errors.push(String(error))});
-    // `ready` resolves once the boundary, Calendar included, has hydrated and committed its effects.
+    // `ready` resolves once the boundary, Calendar included, has hydrated and committed its effects. React reports the
+    // boundary's recoverable errors during that commit, before any passive effect: read `errors` live after `ready`.
     return {errors, events: fixture.events, ready, unmount: () => root.unmount(), current: () => fixture.props, patch: () => { throw new Error('Not patchable'); }};
 }

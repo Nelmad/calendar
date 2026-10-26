@@ -1,0 +1,12 @@
+# The workflows pin every action by its full commit SHA with the release in a comment; Dependabot moves both, once a
+# month in one pull request. npm dependencies are updated by hand.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - '*'

@@ -257,7 +257,7 @@ await page.screenshot({path: resolve(output, 'touch-sheet.png')});
 await context.tracing.stop({path: resolve(output, 'touch-trace.zip')});
 const report = {
     capturedAt: new Date().toISOString(), browser: browser.version(), platform: process.platform, osRelease: release(),
-    automation: 'playwright@1.55.1 / CDP Input.dispatchTouchEvent', realDevice: false,
+    automation: 'playwright@1.64.1 / CDP Input.dispatchTouchEvent', realDevice: false,
     viewport: {widths: [390, 412], height: 844}, deviceScaleFactor: 3, hasTouch: true, isMobile: true,
     longPressMs: LONG_PRESS_MS, movementSlopCssPx: MOVE_SLOP_PX,
     scope: 'Private T02 touch recognizer/composition experiment, not implemented Calendar move semantics or physical iOS/Android conformance',
