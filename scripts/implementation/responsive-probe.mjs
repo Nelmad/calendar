@@ -126,9 +126,14 @@ async function scenario(name, config, body) {
     await check(name, async () => {
         const fixture = await setup(config);
         try {
-            const recoverable = await fixture.page.evaluate(() => window.cal.errors);
-            assert.deepEqual(recoverable, [], 'hydration must not recover from mismatches');
-            return await body(fixture.page, fixture);
+            // The errors array fills during commits: a Suspense boundary that hydrates on its own (QA-01) reports
+            // its recoverable errors only when it commits, so it is read live once `ready` has resolved.
+            if (config.suspense) { await fixture.page.evaluate(() => window.cal.ready); await settle(fixture.page); }
+            const recoverable = () => fixture.page.evaluate(() => window.cal.errors);
+            assert.deepEqual(await recoverable(), [], 'hydration must not recover from mismatches');
+            const result = await body(fixture.page, fixture);
+            assert.deepEqual(await recoverable(), [], 'nothing recovers from a mismatch or a render error later');
+            return result;
         } finally { await fixture.context.close(); }
     });
 }
@@ -501,7 +506,6 @@ try {
     for (const shadow of [false, true]) for (const [container, layout, presentation] of [[1000, 'desktop', 'popover'], [400, 'mobile', 'inline']]) {
         await scenario(`QA-01 ${shadow ? 'shadow' : 'document'} @${container}px: hydration inside a Suspense boundary settles to idle; Today and Enter work`,
             {shadow, suspense: true, options: {items: samples, unknownToday: true}, container}, async page => {
-                await page.evaluate(() => window.cal.ready); await settle(page);
                 const cdp = await page.context().newCDPSession(page); await cdp.send('Performance.enable');
                 const metrics = async () => Object.fromEntries((await cdp.send('Performance.getMetrics')).metrics.map(metric => [metric.name, metric.value]));
                 const before = await metrics(), layouts = await page.evaluate(() => window.layouts.length);
