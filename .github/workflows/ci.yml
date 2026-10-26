@@ -60,8 +60,7 @@ jobs:
   # One npm pack per run: the packed consumers and the milestone acceptance (SSR, hydration, keyboard, axe) test that file,
   # and each first requires it to be byte-identical to the checkout's build.
   packed-consumers:
-    # Ubuntu 24.04, not -latest: Playwright 1.55 (the spikes pin) refuses to install on Ubuntu 26.04 (no ffmpeg build for it).
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v6
@@ -101,8 +100,7 @@ jobs:
 
   # The Chrome probes of the checkout sources and the Storybook smoke on every pull request.
   browser-probes:
-    # Ubuntu 24.04: see packed-consumers.
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v6
