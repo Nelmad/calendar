@@ -66,9 +66,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # An exact version: the bundle-size gate records Node and zlib, and a bump is a toolchain change with before/after numbers.
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version: 24.20.0
           cache: npm
       - run: npm ci
       - run: npm ci --prefix scripts/implementation/spikes
@@ -92,6 +93,8 @@ jobs:
       - run: node scripts/implementation/alpha-acceptance.mjs --milestone="$MILESTONE" --tarball="$TARBALL" --output="$RUNNER_TEMP/packed-consumers/milestone-acceptance"
         env:
           MILESTONE: ${{ steps.archive.outputs.milestone }}
+      # The size of the full Calendar against the candidate budget: report-only until the freeze (issue #12, decision Q1).
+      - run: node scripts/implementation/bundle-size.mjs --tarball="$TARBALL" --output="$RUNNER_TEMP/packed-consumers/bundle-size"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:

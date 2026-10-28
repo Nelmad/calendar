@@ -38,7 +38,7 @@ const commands = [
     // RELEASE-ALIGN 2026-10-23: archive helpers, repository.url and invariants of the owner's staged-publishing Release workflow and of CI.
     ['release-selftest', 'node', ['--test', 'scripts/release/release-metadata.checks.mjs']],
     // The packed acceptance itself is slow and uses the registry; CI runs it in the packed-consumers job (alpha-acceptance.mjs).
-    ...['packed-harness.mjs', 'packed-consumers.mjs', 'alpha-acceptance.mjs', 'acceptance-alpha2.mjs', 'responsive-probe.mjs', 'overlay-probe.mjs', 'host-probe.mjs', 'portal-stories-check.mjs', 'actions-sources-probe.mjs', 'themes-slots-probe.mjs', 'examples-dev-probe.mjs', 'month-probe.mjs', 'controller-probe.mjs', 'review2-probe.mjs', 'review3-probe.mjs', 'projection-probe.mjs', 'browser-probes.mjs', 'verify-foundation.mjs'].map(name => [`harness-syntax-${name.replace('.mjs', '')}`, 'node', ['--check', `scripts/implementation/${name}`]]),
+    ...['packed-harness.mjs', 'packed-consumers.mjs', 'bundle-size.mjs', 'alpha-acceptance.mjs', 'acceptance-alpha2.mjs', 'responsive-probe.mjs', 'overlay-probe.mjs', 'host-probe.mjs', 'portal-stories-check.mjs', 'actions-sources-probe.mjs', 'themes-slots-probe.mjs', 'examples-dev-probe.mjs', 'month-probe.mjs', 'controller-probe.mjs', 'review2-probe.mjs', 'review3-probe.mjs', 'projection-probe.mjs', 'browser-probes.mjs', 'verify-foundation.mjs'].map(name => [`harness-syntax-${name.replace('.mjs', '')}`, 'node', ['--check', `scripts/implementation/${name}`]]),
 ];
 const sourcePaths = [
     'README.md', 'README.ru.md', 'CHANGELOG.md', 'docs/api.md', 'docs/api.ru.md', 'docs/migration-0.1-to-0.2.md', 'docs/migration-0.1-to-0.2.ru.md',
@@ -85,7 +85,10 @@ const sourcePaths = [
     'src/v02/surface.ts', 'src/v02/public.ts', 'src/v02/public.guard.ts', 'vitest.setup.ts', 'vitest.config.ts', 'src/v02/calendar/__tests__/surface.test.tsx', 'src/v02/calendar/__tests__/surface.ssr.test.tsx',
     'tests/contracts/public/positive.ts', 'tests/contracts/public/negative.ts', 'scripts/implementation/packed-probes/shared/require.cts',
     'tests/contracts/public/tsconfig.bundler.json', 'tests/contracts/public/tsconfig.nodenext.json', 'scripts/implementation/packed-consumers.mjs',
-    'scripts/implementation/packed-harness.mjs', 'scripts/implementation/harness.checks.mjs', 'scripts/implementation/review2-entry.tsx', 'scripts/implementation/review2-probe.mjs', 'scripts/implementation/review3-entry.tsx', 'scripts/implementation/review3-probe.mjs',
+    'scripts/implementation/packed-harness.mjs', 'scripts/implementation/harness.checks.mjs', 'scripts/implementation/bundle-size.mjs',
+    ...['package.json', 'package-lock.json', 'vite.config.mjs', 'budget.json', 'calendar.html', 'baseline.html', 'src/calendar.jsx', 'src/baseline.jsx', 'src/shell.jsx']
+        .map(path => `scripts/implementation/bundle-fixture/${path}`),
+    'scripts/implementation/review2-entry.tsx', 'scripts/implementation/review2-probe.mjs', 'scripts/implementation/review3-entry.tsx', 'scripts/implementation/review3-probe.mjs',
     '.gitignore', 'scripts/implementation/alpha-acceptance.mjs', 'scripts/implementation/acceptance-alpha2.mjs', 'src/v02/calendar/__tests__/alpha1.test.tsx', 'scripts/implementation/spikes/package.json',
     ...['shared/Acceptance.tsx', 'shared/clock.mjs', 'vite/acceptance.html', 'vite/acceptance.vite.config.mjs', 'vite/acceptance-server.mjs', 'vite/src/acceptance/main.tsx',
         'vite/src/acceptance/entry-server.tsx', 'next/app/acceptance/page.tsx', 'next/app/acceptance/clock/route.ts'].map(path => `scripts/implementation/acceptance-probes/${path}`),

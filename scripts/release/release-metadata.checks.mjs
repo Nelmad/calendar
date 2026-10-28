@@ -108,6 +108,7 @@ test('CI runs every gate on pull requests and pushes to main with a read-only to
         'npm run check:timezones', 'npm run check:transitions', 'npm run check:docs', 'node scripts/docs/check-docs-selftest.mjs', 'npm run check:api', 'npm run build-storybook',
         'npm run check:package -- --tarball="$TARBALL" --output="$RUNNER_TEMP/packed-consumers"',
         'node scripts/implementation/alpha-acceptance.mjs --milestone="$MILESTONE" --tarball="$TARBALL" --output="$RUNNER_TEMP/packed-consumers/milestone-acceptance"',
+        'node scripts/implementation/bundle-size.mjs --tarball="$TARBALL" --output="$RUNNER_TEMP/packed-consumers/bundle-size"',
         'node scripts/implementation/browser-probes.mjs --output="$RUNNER_TEMP/browser-probes"']) assert.ok(runs.includes(command), command);
     // The minimum compiler and the host time zone are step environments of their own commands.
     assert.match(workflow, /- run: npm run typecheck:contract\n {8}env:\n {10}CALENDAR_TYPESCRIPT_COMPILER: scripts\/implementation\/spikes\/node_modules\/typescript-min\/lib\/tsc\.js\n/);

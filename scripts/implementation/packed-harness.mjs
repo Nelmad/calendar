@@ -82,11 +82,14 @@ export function packCandidate({run, record, temporary, output, tarball}) {
     return {pack, tarball: bytes, details: {version: pack.version, filename: pack.filename, integrity: pack.integrity, sha256: hash(bytes), files: pack.files.map(file => file.path), source: 'npm pack of the checkout'}};
 }
 
-/** Copies examples/<kind> outside the checkout, applies overlays and installs the packed archive. */
-export function prepareConsumer({kind, temporary, pack, run, record, output, overlays = [], refresh = false}) {
+/**
+ * Copies the consumer at `source` (examples/<kind> by default) outside the checkout, applies overlays and installs the
+ * packed archive. With `refresh` the resulting lock is written back to `source`.
+ */
+export function prepareConsumer({kind, source = join(examples, kind), temporary, pack, run, record, output, overlays = [], refresh = false}) {
     const manifest = JSON.parse(readFileSync(join(root, 'package.json')));
     const directory = join(temporary, kind);
-    cpSync(join(examples, kind), directory, {recursive: true, filter: source => !local.test(source.slice(join(examples, kind).length))});
+    cpSync(source, directory, {recursive: true, filter: path => !local.test(path.slice(source.length))});
     for (const overlay of overlays) if (existsSync(overlay)) cpSync(overlay, directory, {recursive: true});
     const lockPath = join(directory, 'package-lock.json');
     if (refresh && existsSync(lockPath)) {
@@ -104,7 +107,7 @@ export function prepareConsumer({kind, temporary, pack, run, record, output, ove
         writeFileSync(lockPath, JSON.stringify(lock, null, 2) + '\n');
     }
     run(`${kind}-install`, 'npm', [refresh ? 'install' : 'ci', '--no-audit', '--no-fund', ...(process.env.CALENDAR_OFFLINE === '1' ? ['--offline'] : [])], directory);
-    if (refresh) cpSync(lockPath, join(examples, kind, 'package-lock.json'));
+    if (refresh) cpSync(lockPath, join(source, 'package-lock.json'));
     cpSync(lockPath, join(output, `${kind}-lock.json`));
     const installed = JSON.parse(readFileSync(lockPath));
     assert.equal(installed.packages['node_modules/@nelmad/calendar'].integrity, pack.integrity);

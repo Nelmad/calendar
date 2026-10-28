@@ -16,7 +16,7 @@ const listen = (server, port) => new Promise(resolve => server.listen(port, '127
 test('the npm cache of every packed-consumer command lives in the platform temporary directory', () => {
     // The CI job runs on ubuntu-latest, where a hard-coded macOS path such as /private/tmp cannot be created.
     assert.ok(env.npm_config_cache.startsWith(tmpdir()) || env.npm_config_cache === process.env.CALENDAR_NPM_CACHE, env.npm_config_cache);
-    assert.doesNotMatch(readFileSync(join(root, 'scripts/implementation/packed-harness.mjs'), 'utf8'), /['"]\/private\//);
+    for (const script of ['packed-harness.mjs', 'bundle-size.mjs']) assert.doesNotMatch(readFileSync(join(root, 'scripts/implementation', script), 'utf8'), /['"]\/private\//, script);
 });
 
 test('a filtered acceptance run is partial, never a pass, and records its filter', () => {
@@ -52,9 +52,96 @@ test('CI uploads the reports of its own packed-consumer, acceptance and probe ru
     const job = workflow.slice(workflow.indexOf('  packed-consumers:'), workflow.indexOf('  browser-probes:')), probes = workflow.slice(workflow.indexOf('  browser-probes:'));
     assert.match(job, /npm run check:package -- --tarball="\$TARBALL" --output="\$RUNNER_TEMP\/packed-consumers"/);
     assert.match(job, /alpha-acceptance\.mjs --milestone="\$MILESTONE" --tarball="\$TARBALL" --output="\$RUNNER_TEMP\/packed-consumers\/milestone-acceptance"/);
+    assert.match(job, /bundle-size\.mjs --tarball="\$TARBALL" --output="\$RUNNER_TEMP\/packed-consumers\/bundle-size"/);
+    // The size step follows the acceptance and directly precedes the upload, so a size failure never hides their results.
+    assert.match(job, /alpha-acceptance\.mjs [^\n]+\n(?: {8}[^\n]+\n)*(?: {6}#[^\n]*\n)* {6}- run: node scripts\/implementation\/bundle-size\.mjs [^\n]+\n {6}- uses: actions\/upload-artifact@/);
     assert.match(job, /if: always\(\)\n {8}with:\n {10}name: packed-consumers\n {10}path: \$\{\{ runner\.temp \}\}\/packed-consumers/);
     assert.match(probes, /if: always\(\)\n {8}with:\n {10}name: browser-probes\n {10}path: \$\{\{ runner\.temp \}\}\/browser-probes/);
     assert.doesNotMatch(workflow, /docs\/implementation\/evidence/);
+});
+
+// Issue #12, decision Q2b: the size gate records Node and zlib, so its job cannot silently float back to the latest patch.
+test('the packed-consumers job sets up one exact Node version', () => {
+    const workflow = readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8');
+    const job = workflow.slice(workflow.indexOf('  packed-consumers:'), workflow.indexOf('  browser-probes:'));
+    assert.deepEqual([...job.matchAll(/^ +node-version: (.+)$/gm)].map(match => /^\d+\.\d+\.\d+$/.test(match[1])), [true]);
+    assert.match(job, /- uses: actions\/setup-node@[0-9a-f]{40} # v[\d.]+\n {8}with:\n {10}node-version: \d+\.\d+\.\d+\n/);
+});
+
+// Issue #12, decision Q1: the bundle-size verdict with synthetic sizes and module graphs.
+test('the bundle-size verdict reports a candidate excess, fails an enforced one and fails a build assertion in both modes', async () => {
+    const {buildAssertions, verdict} = await import('./bundle-size.mjs');
+    const candidate = {jsGzipBytes: 81920, cssGzipBytes: 10240, status: 'candidate', enforce: false};
+    const frozen = {...candidate, status: 'frozen', enforce: true, decision: 'https://github.com/Nelmad/calendar/issues/13#issuecomment-1', decidedOn: '2026-11-02'};
+    const delta = {js: 96377, css: 4282}, passing = [{name: 'Day.js is absent from the calendar graph', pass: true}];
+    // (a) Report-only and over budget: exit 0, overBudget and a warning annotation with the excess.
+    assert.deepEqual(verdict({budget: candidate, delta, assertions: passing}), {exitCode: 0, overBudget: {js: true, css: false},
+        annotations: ['::warning title=Bundle size::JS delta 96377 B exceeds candidate 81920 B by 14457 B (14.1 KiB)']});
+    assert.deepEqual(verdict({budget: candidate, delta: {js: 81920, css: 10240}, assertions: passing}), {exitCode: 0, overBudget: {js: false, css: false}, annotations: []});
+    // (b) Enforced and over budget: exit 1; at the threshold it passes.
+    const enforced = verdict({budget: frozen, delta: {js: 4096, css: 10241}, assertions: passing});
+    assert.deepEqual([enforced.exitCode, enforced.overBudget], [1, {js: false, css: true}]);
+    assert.deepEqual(enforced.annotations, ['::error title=Bundle size::CSS delta 10241 B exceeds frozen 10240 B by 1 B (0.0 KiB)']);
+    assert.equal(verdict({budget: frozen, delta: {js: 81920, css: 4282}, assertions: passing}).exitCode, 0);
+    // (c) Day.js in the graph: exit 1 in both modes, within budget too.
+    const required = ['calendar/CalendarMonth', 'calendar/DayAgendaBody', 'calendar/SourceSelector', 'calendar/overlays', 'themes/classic', 'themes/neutral']
+        .map(path => `/t/node_modules/@nelmad/calendar/dist/v02/${path}.js`);
+    const build = ({graph = required, included = graph, text = 'export{};', js = true, css = true, target = 'es2020'} = {}) => ({resolved: {target}, graph, included,
+        chunks: [...(js ? [{type: 'js', text}] : []), ...(css ? [{type: 'css', text: ''}] : [])]});
+    const baseline = build({graph: ['/t/src/baseline.jsx'], css: false});
+    const failed = builds => buildAssertions(builds).filter(assertion => !assertion.pass).map(assertion => assertion.name);
+    const failures = calendar => failed({baseline, calendar});
+    assert.deepEqual(failures(build()), []);
+    const dayjs = buildAssertions({baseline, calendar: build({graph: [...required, '/t/node_modules/dayjs/dayjs.min.js'], included: required})});
+    assert.deepEqual(dayjs.filter(assertion => !assertion.pass).map(assertion => assertion.name), ['Day.js is absent from the calendar graph']);
+    for (const budget of [candidate, frozen]) assert.equal(verdict({budget, delta: {js: 1, css: 1}, assertions: dayjs}).exitCode, 1);
+    // Every other assertion catches its own fault. React Aria's barrels load the drag and drop modules into the graph and
+    // Rollup drops them, so decision Q7 checks the rendered modules.
+    const dnd = '/t/node_modules/react-aria/dist/private/dnd/useDrag.mjs';
+    assert.deepEqual(failures(build({graph: [...required, dnd], included: required})), []);
+    assert.deepEqual(failures(build({included: [...required, dnd]})), ['no React Aria drag and drop module in the calendar chunks']);
+    assert.deepEqual(failures(build({text: 'console.warn("[@nelmad/calendar] x")'})), ['no calendar chunk contains the development-warning prefix']);
+    assert.deepEqual(failures(build({text: 'import "dayjs";'})), ['Day.js is absent from the calendar output']);
+    for (const path of required) {
+        assert.deepEqual(failures(build({included: required.filter(id => id !== path)})), [`calendar build contains ${path.slice(path.indexOf('dist/'))}`]);
+    }
+    assert.deepEqual(failures(build({css: false})), ['calendar build has JS and CSS chunks']);
+    assert.deepEqual(failures(build({js: false})), ['calendar build has JS and CSS chunks']);
+    assert.deepEqual(failed({baseline: build({graph: [], js: false, css: false}), calendar: build()}), ['baseline build has a JS chunk']);
+    assert.deepEqual(failed({baseline: build({graph: required.slice(0, 1), css: false}), calendar: build()}), ['baseline build has no @nelmad/calendar module']);
+    // Decision Q2a: the gated number is measured at es2020 only, in both builds.
+    assert.deepEqual(failures(build({target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14']})), ['both builds use target es2020']);
+    assert.deepEqual(failed({baseline: build({graph: [], css: false, target: 'esnext'}), calendar: build()}), ['both builds use target es2020']);
+});
+
+// Issue #12, decisions Q1 and Q6c: the thresholds come only from budget.json, and a frozen budget names its dated decision.
+test('budget.json is read strictly: a malformed budget or a frozen one without its decision is a measurement error', async () => {
+    const {fixture, readBudget} = await import('./bundle-size.mjs');
+    const candidate = {jsGzipBytes: 81920, cssGzipBytes: 10240, status: 'candidate', enforce: false};
+    // The candidate ceilings until the freeze PR (decision Q6c) changes this file and this line together.
+    assert.deepEqual(readBudget(readFileSync(join(fixture, 'budget.json'), 'utf8')), candidate);
+    const frozen = {...candidate, status: 'frozen', enforce: true, decision: 'https://github.com/Nelmad/calendar/issues/13#issuecomment-1', decidedOn: '2026-11-02'};
+    assert.deepEqual(readBudget(JSON.stringify(frozen)), frozen);
+    for (const [text, reason] of [['{', /not JSON/], ['[]', /object/], [{...candidate, jsGzipBytes: undefined}, /jsGzipBytes/], [{...candidate, cssGzipBytes: '10240'}, /cssGzipBytes/],
+        [{...candidate, jsGzipBytes: 0}, /jsGzipBytes/], [{...candidate, status: 'draft'}, /status/], [{...candidate, enforce: 'false'}, /enforce/],
+        [{...candidate, enforce: true}, /enforce is true exactly when status is "frozen"/], [{...frozen, enforce: false}, /enforce is true exactly when status is "frozen"/],
+        [{...frozen, decision: undefined}, /decision/], [{...frozen, decision: 'http://example.com/decision'}, /decision/],
+        [{...frozen, decidedOn: undefined}, /decidedOn/], [{...frozen, decidedOn: '2026-13-01'}, /decidedOn/], [{...frozen, decidedOn: '2026-11-02T00:00:00Z'}, /decidedOn/]]) {
+        assert.throws(() => readBudget(typeof text === 'string' ? text : JSON.stringify(text)), reason, JSON.stringify(text));
+    }
+});
+
+// Issue #12, decision Q2a and the fixture rules: one shared config at es2020, React external only, public imports only.
+test('the bundle fixture builds at target es2020 with only React and ReactDOM external and imports only the public entry', async () => {
+    const {default: config} = await import('./bundle-fixture/vite.config.mjs');
+    assert.equal(config.build.target, 'es2020');
+    const {external} = config.build.rollupOptions;
+    for (const id of ['react', 'react-dom', 'react/jsx-runtime', 'react-dom/client']) assert.ok(external(id), id);
+    for (const id of ['react-aria', 'react-aria-components', 'react-stately', '@internationalized/date', '@nelmad/calendar', 'reactive', 'react-domain']) assert.ok(!external(id), id);
+    const source = name => readFileSync(join(root, 'scripts/implementation/bundle-fixture/src', name), 'utf8');
+    assert.deepEqual([...source('calendar.jsx').matchAll(/(?:from|import) '(@nelmad\/calendar[^']*)'/g)].map(match => match[1]), ['@nelmad/calendar', '@nelmad/calendar/styles.css']);
+    assert.match(source('calendar.jsx'), /theme=\{search\.get\('theme'\) === 'neutral' \? neutralTheme : classicTheme\}/);
+    assert.doesNotMatch(source('baseline.jsx') + source('shell.jsx'), /@nelmad\/calendar/);
 });
 
 // PV9-1-01/02: the workflows pack once and pass that archive to every harness, which then neither builds nor packs.
