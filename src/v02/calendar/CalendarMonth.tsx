@@ -345,10 +345,12 @@ function MonthSurface<I, S>({controller, headingId}: {controller: CalendarContro
             <OverlayChildren parent={agendaOwner} root={{modal: presentation === 'sheet', element: () => agendaRef.current, fallback: () => heading.current ?? agendaRef.current}}/>
         </ItemActionsContext.Provider></OverlayProvider>
     </section>;
+    // With the move pair the popover is wider, as its rows also hold the pending label and marker (#10 decision Q10).
+    const popoverClass = model.moves ? 'nc-agenda-popover-moves' : undefined;
     return <>
         <MonthView controller={controller} headingId={headingId} onDateActivate={activate} popup={presentation !== 'inline'} openAgendaDate={overlay ? date : undefined}/>
         {presentation === 'inline' ? body
-            : overlay === 'popover' ? portal && anchor && <NonModalPopover anchor={anchorRef} portal={portal}>{body}</NonModalPopover>
+            : overlay === 'popover' ? portal && anchor && <NonModalPopover anchor={anchorRef} portal={portal} className={popoverClass}>{body}</NonModalPopover>
                 : overlay === 'sheet' && portal && <ModalSheet portal={portal} onDismiss={() => close()}>{body}</ModalSheet>}
     </>;
 }

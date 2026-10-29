@@ -84,9 +84,10 @@ function adjust(node: HTMLElement | null, anchor: HTMLElement | null, boundary: 
  * Scrolling outside the overlay, or a size change of a box that holds its anchor, repositions it; its own scrolling never
  * does (QA-02, QA-D-3-02). While its anchor is scrolled
  * out of view, the overlay is clipped away with it instead of hanging over unrelated content (QA-21); it keeps
- * focus, and keyboard focus inside it scrolls the anchor back into view.
+ * focus, and keyboard focus inside it scrolls the anchor back into view. `className` adds a class to the popover surface.
  */
-export function NonModalPopover({anchor, portal, kind = 'agenda', children}: {anchor: RefObject<HTMLElement | null>; portal: Element; kind?: 'agenda' | 'menu'; children: ReactNode}) {
+export function NonModalPopover({anchor, portal, kind = 'agenda', className, children}: {anchor: RefObject<HTMLElement | null>; portal: Element; kind?: 'agenda' | 'menu';
+    className?: string; children: ReactNode}) {
     const scope = useThemeScope(), overlay = useRef<HTMLDivElement>(null), scroller = useRef<HTMLDivElement>(null);
     const boundary = dialogContainer(portal) ?? portal.ownerDocument.body;
     const offset = kind === 'menu' ? 4 : 8;
@@ -137,7 +138,7 @@ export function NonModalPopover({anchor, portal, kind = 'agenda', children}: {an
     }, [anchor, target, portal, boundary, offset, updatePosition]);
     return <Overlay portalContainer={portal} disableFocusManagement>
         <div {...overlayProps} ref={overlay} className={`nc-positioned-popover nc-${kind}-positioner`}>
-            <PortalTheme ref={scroller} className={`nc-popover nc-${kind}-popover`}>{children}</PortalTheme>
+            <PortalTheme ref={scroller} className={`nc-popover nc-${kind}-popover${className ? ` ${className}` : ''}`}>{children}</PortalTheme>
         </div>
     </Overlay>;
 }
