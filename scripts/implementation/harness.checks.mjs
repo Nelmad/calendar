@@ -131,6 +131,60 @@ test('budget.json is read strictly: a malformed budget or a frozen one without i
     }
 });
 
+// Issue #20: the CLS budget file is configuration only and is read as strictly as budget.json.
+test('cls-budget.json is read strictly: a malformed scenario value or run count, or a frozen budget without its decision, is a measurement error', async () => {
+    const {budgetFile, budgetScenarios, readClsBudget} = await import('./cls-probe.mjs');
+    const candidate = {scenarios: {'auto-390': 0, 'mobile-390': 0, 'desktop-1200': 0, 'auto-1200': 0.1}, runs: 10, status: 'candidate', enforce: false};
+    // The candidate values until the freeze PR changes this file and this line together.
+    assert.deepEqual(readClsBudget(readFileSync(budgetFile, 'utf8')), candidate);
+    assert.deepEqual(Object.keys(candidate.scenarios), budgetScenarios);
+    const frozen = {...candidate, status: 'frozen', enforce: true, decision: 'https://github.com/Nelmad/calendar/issues/13#issuecomment-1', decidedOn: '2026-11-02'};
+    assert.deepEqual(readClsBudget(JSON.stringify(frozen)), frozen);
+    const scenarios = values => ({...candidate, scenarios: {...candidate.scenarios, ...values}});
+    const {'auto-1200': _switch, ...missing} = candidate.scenarios;
+    for (const [text, reason] of [['{', /not JSON/], ['[]', /object/], [{...candidate, scenarios: undefined}, /scenarios must be an object/],
+        [{...candidate, scenarios: missing}, /name exactly/], [scenarios({'auto-1280': 0}), /name exactly/], [scenarios({'auto-1200': '0.1'}), /auto-1200/],
+        [scenarios({'auto-390': -0.01}), /auto-390/], [scenarios({'mobile-390': null}), /mobile-390/], [{...candidate, runs: undefined}, /runs/], [{...candidate, runs: 0}, /runs/],
+        [{...candidate, runs: 2.5}, /runs/], [{...candidate, status: 'draft'}, /status/], [{...candidate, enforce: 'false'}, /enforce/],
+        [{...candidate, enforce: true}, /enforce is true exactly when status is "frozen"/], [{...frozen, enforce: false}, /enforce is true exactly when status is "frozen"/],
+        [{...frozen, decision: undefined}, /decision/], [{...frozen, decision: 'http://example.com/decision'}, /decision/],
+        [{...frozen, decidedOn: undefined}, /decidedOn/], [{...frozen, decidedOn: '2026-02-30'}, /decidedOn/]]) {
+        assert.throws(() => readClsBudget(typeof text === 'string' ? text : JSON.stringify(text)), reason, JSON.stringify(text));
+    }
+});
+
+test('the CLS probe takes the largest session window, cross-checks the trace and reports a candidate budget without failing', async () => {
+    const {budgetVerdict, harnessErrors, layoutShiftEvents, sessionWindow, traceMismatch} = await import('./cls-probe.mjs');
+    const shift = (startTime, value, hadRecentInput = false) => ({startTime, value, hadRecentInput, sources: []});
+    // A 1 s gap or a 5 s span starts a new window.
+    assert.equal(sessionWindow([]), 0);
+    assert.equal(sessionWindow([shift(0, 0.1), shift(999, 0.2), shift(2100, 0.25)]), 0.30000000000000004);
+    assert.equal(sessionWindow([shift(0, 0.1), shift(1000, 0.2)]), 0.2);
+    assert.equal(sessionWindow([0, 900, 1800, 2700, 3600, 4500, 5400].map(time => shift(time, 0.1))), 0.6);
+    // Only main-frame events without recent input, in trace order.
+    const event = (ts, score, data = {}) => ({name: 'LayoutShift', ts, args: {data: {score, is_main_frame: true, had_recent_input: false, ...data}}});
+    const trace = {traceEvents: [event(20, 0.2), event(10, 0.1), event(30, 0.5, {is_main_frame: false}), event(40, 0.5, {had_recent_input: true}), {name: 'Paint', ts: 5}]};
+    assert.deepEqual(layoutShiftEvents(trace), [{ts: 10, score: 0.1}, {ts: 20, score: 0.2}]);
+    assert.equal(traceMismatch([shift(1, 0.1), shift(2, 0.2 + 5e-7)], layoutShiftEvents(trace)), null);
+    assert.match(traceMismatch([shift(1, 0.1)], layoutShiftEvents(trace)), /1 observer entries but 2 trace/);
+    assert.match(traceMismatch([shift(1, 0.1), shift(2, 0.21)], layoutShiftEvents(trace)), /entry 1/);
+    const clean = {entries: [], paint: {fcp: 40}, hydration: {startedAt: 90}, recoverableErrors: [], replacements: 1, hydrationLayouts: ['mobile', 'desktop'],
+        callbacks: [{name: 'onVisibleRangeChange'}], traceMismatch: null, pageErrors: [], assertions: []};
+    assert.deepEqual(harnessErrors(clean), []);
+    assert.deepEqual(harnessErrors({...clean, entries: [shift(1, 0.01, true)], paint: {fcp: 95}, recoverableErrors: ['mismatch'], replacements: 2,
+        hydrationLayouts: ['mobile', 'desktop', 'mobile'], callbacks: [], traceMismatch: 'x', pageErrors: ['boom'], assertions: ['layout']}).length, 8);
+    const budget = {scenarios: {'auto-390': 0, 'mobile-390': 0, 'desktop-1200': 0, 'auto-1200': 0.1}, runs: 2, status: 'candidate', enforce: false};
+    const runs = (...values) => values.map(cls => ({cls, entries: cls ? [shift(1, cls)] : []}));
+    const results = {'auto-390': runs(0, 0), 'mobile-390': runs(0, 0), 'desktop-1200': runs(0, 0), 'auto-1200': runs(0.05, 0.1)};
+    assert.deepEqual([budgetVerdict(budget, results).pass, budgetVerdict(budget, results).exitCode], [true, 0]);
+    // A zero budget allows no entry at all; a missing run is never a pass. A candidate reports, an enforced budget fails.
+    const over = {...results, 'auto-390': runs(0, 1e-9), 'auto-1200': runs(0.11)};
+    const reported = budgetVerdict(budget, over);
+    assert.deepEqual([reported.exitCode, reported.scenarios['auto-390'].pass, reported.scenarios['auto-1200'].pass], [0, false, false]);
+    assert.match(reported.annotations.join('\n'), /::warning title=CLS budget::auto-1200: 1 of 2 runs exceeds candidate 0\.1/);
+    assert.equal(budgetVerdict({...budget, status: 'frozen', enforce: true}, over).exitCode, 1);
+});
+
 // Issue #12, decision Q2a and the fixture rules: one shared config at es2020, React external only, public imports only.
 test('the bundle fixture builds at target es2020 with only React and ReactDOM external and imports only the public entry', async () => {
     const {default: config} = await import('./bundle-fixture/vite.config.mjs');
