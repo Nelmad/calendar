@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `CalendarMessages.selectionDraftStateLabel` (en-US "In selection", ru-RU "В выделении"), the state label of date cells inside a selection draft. Nothing displays it yet; selection is planned for `0.2.0-beta.1`. Code that types a complete `CalendarMessages` object must add the key; partial `messages` overrides are unaffected.
 
+### Fixed
+
+- With the default `layout="auto"` and `mobileBreakpoint`, a server-rendered calendar whose content box is at least 640 px wide (672 px for the root with the default padding) no longer moves the page when it hydrates to the desktop month: until the first measurement, the stylesheet sizes the server's compact month like the desktop month and does not display its inline agenda. The limits (a policy that blocks style attributes, shrink-to-fit hosts, another `mobileBreakpoint`) are in the [`layout` reference](https://github.com/Nelmad/calendar/blob/main/docs/api.md#prop-layout).
+
 ## [0.2.0-alpha.2] - 2026-10-26
 
 The first `0.2` prerelease published to npm. It is on the `next` dist-tag and `latest` stays `0.1.1`, so a plain
