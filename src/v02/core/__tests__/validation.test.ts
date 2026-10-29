@@ -240,4 +240,29 @@ describe('action and move-state snapshot isolation', () => {
         expect(result.diagnostics.filter(d => d.code === 'invalid-record')).toHaveLength(3);
         expect(validateMoveStates([{requestId: 'new', itemId: 'item', status: 'rejected', reason: 'Denied'}]).states).toHaveLength(1);
     });
+    it('keys each excluded move state by its requestId, itemId, status and reason, so another invalid record at the same index warns again (#10)', () => {
+        const issued = new Map([['local', 'item']]);
+        const first = validateMoveStates([{requestId: 'a', itemId: 'item', status: 'wat'}], issued).diagnostics;
+        const second = validateMoveStates([{requestId: 'b', itemId: 'item', status: 'wat'}], issued).diagnostics;
+        const mismatch = validateMoveStates([{requestId: 'local', itemId: 'other', status: 'pending'}], issued).diagnostics;
+        const blank = validateMoveStates([{requestId: 'a', itemId: 'item', status: 'rejected', reason: ' '}], issued).diagnostics;
+        expect([first, second, mismatch, blank].map(list => list.map(d => d.path))).toEqual([['itemMoveStates[0]'], ['itemMoveStates[0]'], ['itemMoveStates[0]'], ['itemMoveStates[0]']]);
+        const keys = [first, second, mismatch, blank].map(list => list[0].key);
+        expect(new Set(keys).size).toBe(4);
+        expect(keys[0]).toBe('itemMoveStates:invalid-record:"a":"item":"wat":undefined');
+        expect(keys[3]).toBe('itemMoveStates:invalid-record:"a":"item":"rejected":" "');
+        // The same record again has the same key: it warns once per instance.
+        expect(validateMoveStates([{requestId: 'a', itemId: 'item', status: 'wat'}], issued).diagnostics[0].key).toBe(keys[0]);
+        // Every copy of a duplicated requestId is excluded under its own record key; copies that are equal share one.
+        const duplicates = validateMoveStates([{requestId: 'dup', itemId: 'x', status: 'pending'}, {requestId: 'dup', itemId: 'y', status: 'pending'},
+            {requestId: 'dup', itemId: 'x', status: 'pending'}]).diagnostics;
+        expect(duplicates.map(d => d.code)).toEqual(['duplicate-id', 'duplicate-id', 'duplicate-id']);
+        expect(new Set(duplicates.map(d => d.key)).size).toBe(2);
+        // Without a usable requestId the path-based default key stays; non-string fields are keyed by their type only.
+        for (const record of [{requestId: ' ', itemId: 'item', status: 'pending'}, {itemId: 'item', status: 'pending'}, null, 'text', {requestId: 7}]) {
+            expect(validateMoveStates([record]).diagnostics[0].key).toBeUndefined();
+        }
+        const odd = validateMoveStates([{requestId: 'r', itemId: {toString: () => { throw new Error('Must not be read'); }}, status: 'pending'}]).diagnostics;
+        expect(odd[0].key).toBe('itemMoveStates:invalid-record:"r":object:"pending":undefined');
+    });
 });
