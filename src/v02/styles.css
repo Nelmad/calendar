@@ -553,6 +553,25 @@
 /* The 1em block margins of the empty line are part of the reserved inline agenda size (--nc-inline-agenda-size). */
 :where(.nc-theme) .nc-day-list-empty { margin: 1em 0; }
 
+/* Issue #20: until its first width decision (the internal `data-unmeasured` marker of the view, on the server and the first
+   client render only), a default `auto` calendar whose content box is at least 640 px wide sizes the server's compact month
+   like the desktop month, so the page below does not move when it hydrates to desktop: desktop rows from the same properties
+   as the desktop rule, no mobile grid minimum and no inline agenda (or the gap before it). The DOM and `data-layout` stay
+   mobile. The view has no padding or border, so its content box is the root content box that the layout decision measures;
+   it is the query container only during this phase, since containment drops its content from the root's intrinsic width. */
+:where(.nc-theme) .nc-calendar-view[data-unmeasured] { container: nc-unmeasured-view / inline-size; }
+
+@container nc-unmeasured-view (inline-size >= 640px) {
+    :where(.nc-theme .nc-calendar-view[data-unmeasured]) .nc-month { min-block-size: 0; }
+
+    :where(.nc-theme .nc-calendar-view[data-unmeasured]) .nc-month-weeks {
+        flex-basis: calc(var(--nc-week-count) * max(var(--nelmad-calendar-density-day-min-height), var(--nc-minimum-row)));
+        min-block-size: calc(var(--nc-week-count) * var(--nc-minimum-row));
+    }
+
+    :where(.nc-theme .nc-calendar-view[data-unmeasured]) .nc-day-list[data-presentation="inline"] { display: none; }
+}
+
 :where(.nc-theme) .nc-day-list ul {
     display: flex;
     flex-direction: column;

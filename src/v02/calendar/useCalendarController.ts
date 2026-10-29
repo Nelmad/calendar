@@ -55,7 +55,7 @@ export function useCalendarController<I, S>(input: CalendarProps<I, S>, surface?
         if (process.env.NODE_ENV === 'production') return;
         if (!warnings.current.has(key)) { warnings.current.add(key); console.warn(`[@nelmad/calendar] ${path}: ${reason}`); }
     }, []);
-    const responsive = useResolvedLayout(input.layout);
+    const responsive = useResolvedLayout(input.layout, input.mobileBreakpoint);
     const model = calendarModel(input, responsive.layout);
     useLayoutObserver(rootRef, model.kind === 'data' && (model.props.layout ?? 'auto') === 'auto', responsive.forced, model.kind === 'data' ? model.props.mobileBreakpoint : undefined,
         responsive.layout, responsive.settle, mirror.notify);
@@ -232,7 +232,7 @@ export function useCalendarController<I, S>(input: CalendarProps<I, S>, surface?
         const state = navRef.current;
         if (state && snapshot) { save(); updateNavigation({...state, month: snapshot.month, date}); }
     };
-    return {model, today, agendaDate: currentAgenda?.date ?? null, focusDate, labelledBy, overlays, mirror, warn, selection,
+    return {model, today, agendaDate: currentAgenda?.date ?? null, focusDate, labelledBy, overlays, mirror, warn, selection, unmeasured: responsive.unmeasured,
         rootRef, gridRef, viewRef, weekdaysRef, agendaRef, todayRef, statusRef, politeRef, urgentRef, registerCell, onDateFocus, navigate, cancelNavigation,
         onViewFocus: (node: Element) => { lastFocus.current = {node, surface: 'view'}; },
         getDateCell,
