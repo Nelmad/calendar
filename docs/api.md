@@ -634,8 +634,10 @@ month does not call it. Focus rules are in the [README](../README.md#navigation)
   first desktop measurement can still grow the rows a little. With the default `mobileBreakpoint`, the stylesheet also
   sizes the server's compact month like the desktop month while the root's content box is at least 640 px wide (672 px
   for the root with the default padding): desktop row heights, and no inline agenda until the first measurement. The
-  DOM and `data-layout` stay mobile. The page below the calendar therefore does not move when it hydrates to desktop.
-  Under a policy that blocks style attributes, only the hidden agenda applies before hydration (see
+  DOM and `data-layout` stay mobile. The page below the calendar therefore does not move when it hydrates to desktop,
+  unless it hydrates in an initial blocking state (`loading/initial`, `error/initial`): that skeleton or error region is
+  not pre-sized and still grows once to the desktop month's height. Under a policy that blocks style attributes, only
+  the hidden agenda applies before hydration (see
   [Strict CSP with SSR](../README.md#limitations)). Without JavaScript such a calendar shows the compact grid at desktop
   row height and no agenda. In a shrink-to-fit host (an inline-block or absolutely positioned wrapper without a width, a
   `max-content` grid track) its server paint is only as wide as its toolbar until the first measurement, so an inline

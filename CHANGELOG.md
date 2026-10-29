@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- With the default `layout="auto"` and `mobileBreakpoint`, a server-rendered calendar whose content box is at least 640 px wide (672 px for the root with the default padding) no longer moves the page when it hydrates to the desktop month: until the first measurement, the stylesheet sizes the server's compact month like the desktop month and does not display its inline agenda. The limits (a policy that blocks style attributes, shrink-to-fit hosts, another `mobileBreakpoint`) are in the [`layout` reference](https://github.com/Nelmad/calendar/blob/main/docs/api.md#prop-layout).
+- With the default `layout="auto"` and `mobileBreakpoint`, a server-rendered calendar whose content box is at least 640 px wide (672 px for the root with the default padding) no longer moves the page when it hydrates to the desktop month: until the first measurement, the stylesheet sizes the server's compact month like the desktop month and does not display its inline agenda. The limits (an initial blocking state, a policy that blocks style attributes, shrink-to-fit hosts, another `mobileBreakpoint`) are in the [`layout` reference](https://github.com/Nelmad/calendar/blob/main/docs/api.md#prop-layout).
 
 ## [0.2.0-alpha.2] - 2026-10-26
 
