@@ -230,15 +230,25 @@ export function validateActions(input: unknown): {actions: readonly CalendarItem
     return {actions, diagnostics};
 }
 
-/** Snapshot validation only; issuer lifecycle/tombstones remain the responsibility of T22. */
+/** A string field as it appears in a diagnostic key; any other value by its type, never by reading or printing it. */
+const keyPart = (value: unknown) => typeof value === 'string' ? JSON.stringify(value) : typeof value;
+/**
+ * Validation of one `itemMoveStates` snapshot: the records it excludes are the same in production and development.
+ * `issued` maps this mount's request IDs to their item IDs. The issuer state machine (src/v02/core/moveRequests.ts)
+ * then decides which kept records of those IDs count. Each excluded record is reported once per instance under a key
+ * of its requestId, itemId, status and reason, so another invalid record at the same index still warns; a record
+ * without a usable requestId keeps the path-based key.
+ */
 export function validateMoveStates(input: readonly unknown[], issued: ReadonlyMap<string, string> = new Map()): {states: readonly CalendarMoveState[]; diagnostics: readonly Diagnostic[]} {
     const duplicates = duplicateIDs(input, 'requestId'), states: CalendarMoveState[] = [], diagnostics: Diagnostic[] = [];
     for (const [index, state] of input.entries()) {
         const path = `itemMoveStates[${index}]`;
-        if (isRecord(state) && duplicates.has(state.requestId as string)) diagnostics.push({code: 'duplicate-id', path, reason: 'All states with this requestId are excluded'});
+        const key = (code: Diagnostic['code']) => isRecord(state) && hasText(state.requestId)
+            ? {key: `itemMoveStates:${code}:${[state.requestId, state.itemId, state.status, state.reason].map(keyPart).join(':')}`} : {};
+        if (isRecord(state) && duplicates.has(state.requestId as string)) diagnostics.push({code: 'duplicate-id', path, reason: 'All states with this requestId are excluded', ...key('duplicate-id')});
         else if (!isRecord(state) || !hasText(state.requestId) || !hasText(state.itemId) || !['pending', 'succeeded', 'rejected'].includes(state.status as string)
             || (state.status === 'rejected' && !hasText(state.reason)) || (issued.has(state.requestId) && issued.get(state.requestId) !== state.itemId)) {
-            diagnostics.push({code: 'invalid-record', path, reason: 'Invalid move state or issuer itemId mismatch'});
+            diagnostics.push({code: 'invalid-record', path, reason: 'Invalid move state or issuer itemId mismatch', ...key('invalid-record')});
         } else states.push(state as CalendarMoveState);
     }
     return {states, diagnostics};

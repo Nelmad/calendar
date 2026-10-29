@@ -32,6 +32,20 @@ type Registry = {document: Document; layers: Layer[]; hidden: Map<Element, Hidde
 
 let sequence = 0;
 const registries = new WeakMap<Document, Registry>(), floating = new Map<Element, number>();
+const closeListeners = new WeakMap<Document, Set<() => void>>();
+/**
+ * Called after a package modal layer of `document` closed and the background effects it owned changed, for example so a
+ * Calendar whose endpoints were inert under another Calendar's sheet writes the move results it still owes (#10 decision Q8).
+ */
+export function subscribeModality(document: Document, listener: () => void) {
+    let listeners = closeListeners.get(document);
+    if (!listeners) { listeners = new Set(); closeListeners.set(document, listeners); }
+    listeners.add(listener);
+    return () => { listeners.delete(listener); };
+}
+function notifyClosed(document: Document) {
+    for (const listener of [...closeListeners.get(document) ?? []]) listener();
+}
 const hostLayerSelector = 'dialog[open], [aria-modal="true"]';
 const unrendered = new Set(['head', 'script', 'style', 'link', 'template', 'meta', 'noscript']);
 const dialogSelector = 'dialog, [role="dialog"], [role="alertdialog"]';
@@ -220,7 +234,7 @@ function registryOf(document: Document): Registry {
     // `inert`/`aria-hidden` changes show a host modal that covers the stack, also on a layer's own top-level node.
     const observer = new MutationObserver(records => {
         if (records.every(record => registry.layers.some(layer => layer.element !== record.target && containsComposed(layer.element, record.target as Element)))) return;
-        if (registry.pending) { settle(registry); return; }
+        if (registry.pending) { settle(registry); if (!registry.pending) notifyClosed(document); return; }
         update(registry);
     });
     const options = {childList: true, subtree: true, attributes: true, attributeFilter: ['open', 'aria-modal', 'role', 'hidden', 'inert', 'aria-hidden']};
@@ -269,8 +283,9 @@ export function openModalLayer(options: ModalLayerOptions) {
         const index = registry.layers.indexOf(layer);
         if (index < 0) return;
         registry.layers.splice(index, 1);
-        if (registry.layers.length) { update(registry); return; }
+        if (registry.layers.length) update(registry);
         // The host layers open at this close decide whether the background and lock outlive the stack.
-        settle(registry);
+        else settle(registry);
+        notifyClosed(document);
     };
 }

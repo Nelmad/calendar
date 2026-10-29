@@ -26,11 +26,16 @@ const modifierKeys: ReadonlySet<string> = new Set(['Shift', 'Control', 'Alt', 'A
 export function CalendarMonth<I, S>(props: CalendarProps<I, S>) {
     return <CalendarMonthRoot input={props}/>;
 }
-/** The public facade passes its prerelease surface; validation then enforces its layouts. */
-export function CalendarMonthRoot<I, S>({input, surface}: {input: CalendarProps<I, S>; surface?: CalendarSurface}) {
+/**
+ * The public facade passes its prerelease surface; validation then enforces its layouts. `onController` is an internal
+ * test seam (see CalendarShell) that the public Calendar never passes.
+ */
+export function CalendarMonthRoot<I, S>({input, surface, onController}: {input: CalendarProps<I, S>; surface?: CalendarSurface;
+    onController?: (controller: CalendarController<I, S>) => void}) {
     // A viewer keeps exactly the alpha.2 element structure (and so the server ids); the selection group precedes the source
     // selector, which therefore remounts (closing an open menu) when the selection pair is added or removed.
-    return <CalendarShell input={input} surface={surface} renderView={(controller, headingId) => <MonthSurface controller={controller} headingId={headingId}/>}
+    return <CalendarShell input={input} surface={surface} onController={onController}
+        renderView={(controller, headingId) => <MonthSurface controller={controller} headingId={headingId}/>}
         renderToolbarControls={controller => controller.selection.enabled
             ? <><SelectionToolbar controller={controller}/><SourceSelector controller={controller}/></> : <SourceSelector controller={controller}/>}
         renderModeLine={controller => controller.selection.enabled ? <SelectionLine controller={controller}/> : null}/>;

@@ -2,6 +2,7 @@ import {useEffect, useRef, type CSSProperties, type ReactNode} from 'react';
 import type {CalendarClassName} from '../reference.js';
 import type {ResolvedAppearance} from '../core/appearance.js';
 import {useServerStyle} from '../primitives/serverStyle.js';
+import {Icon} from '../primitives/index.js';
 
 /**
  * `classNames` resolution (§10.4): a string, or a pure callback of its typed state. Anything else, including a callback
@@ -37,6 +38,15 @@ export function AccentMarker({appearance}: {appearance: ResolvedAppearance}) {
     useServerStyle(source, sourceStyle); useServerStyle(item, itemStyle);
     // An empty decorative node: nothing to hide from assistive technology, so no aria-hidden.
     return <span ref={source} className="nc-item-accent" style={sourceStyle}><span ref={item} style={itemStyle}/></span>;
+}
+
+/**
+ * The package-owned pending marker of an item with an accepted pending move (#10 decision Q9): a static clock in the
+ * resolved item text color, at the inline end of the segment or row, outside the slot content, so `renderItem` and
+ * `renderAgendaItem` never remove it. Decorative: the agenda summary carries the state for assistive technology.
+ */
+export function PendingMarker() {
+    return <span className="nc-item-pending"><Icon name="pending"/></span>;
 }
 
 // Interactive DOM that a passive slot must not contain (§10.4): links, controls, editable or focusable nodes, widget

@@ -15,7 +15,7 @@ export const probes = [
     ['foundation', 'foundation-probe.mjs', 'dir'], ['responsive', 'responsive-probe.mjs', 'dir'], ['overlay', 'overlay-probe.mjs', 'dir'],
     ['host', 'host-probe.mjs', 'dir'], ['actions-sources', 'actions-sources-probe.mjs', 'dir'], ['themes-slots', 'themes-slots-probe.mjs', 'dir'],
     ['examples-dev', 'examples-dev-probe.mjs', 'dir'], ['review2', 'review2-probe.mjs', 'dir'], ['review3', 'review3-probe.mjs', 'dir'],
-    ['selection', 'selection-probe.mjs', 'dir'], ['cls', 'cls-probe.mjs', 'dir'],
+    ['selection', 'selection-probe.mjs', 'dir'], ['move-requests', 'move-requests-probe.mjs', 'dir'], ['cls', 'cls-probe.mjs', 'dir'],
     ['projection', 'projection-probe.mjs', 'file'], ['message-regressions', 'message-regressions.mjs', 'file'], ['portal-stories', 'portal-stories-check.mjs', 'dir'],
 ];
 /** Probe scripts that are deliberately not part of this gate, with the reason; every other *-probe.mjs must be listed above. */

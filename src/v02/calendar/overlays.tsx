@@ -167,10 +167,15 @@ export function createOverlayStack(prefix = '') {
             for (const owner of liveOwners(stack)) { const endpoints = live.get(owner); if (endpoints?.polite?.isConnected) return endpoints; }
             return rootLive();
         },
+        /** The live target is inside an inert or `aria-hidden` background: it stays silent, and owed move results wait. */
+        liveInert() {
+            const target = api.liveTarget();
+            return [target.polite, target.urgent].some(node => !!node && inertComposed(node));
+        },
         announce(polite?: readonly LocalizedText[], urgent?: readonly LocalizedText[]) {
             const target = api.liveTarget();
             // §12.4: endpoints inside another Calendar's inert background stay silent, and no stale text outlives it.
-            if ([target.polite, target.urgent].some(node => node && inertComposed(node))) { writeLive(target.polite, []); writeLive(target.urgent, []); return; }
+            if (api.liveInert()) { writeLive(target.polite, []); writeLive(target.urgent, []); return; }
             if (polite) writeLive(target.polite, polite);
             if (urgent) writeLive(target.urgent, urgent);
         },

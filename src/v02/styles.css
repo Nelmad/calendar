@@ -819,6 +819,19 @@
     transform: scaleX(-1);
 }
 
+/* The move pending marker (#10): a static clock, 1em square in the item text color at the inline end of a segment or an
+   agenda row. It never shrinks, so the title's ellipsis gives way first, and no container query hides it. */
+:where(.nc-theme) .nc-item-pending {
+    display: inline-flex;
+    flex: none;
+    align-self: center;
+}
+
+:where(.nc-theme) .nc-item-pending > .nc-icon {
+    inline-size: 1em;
+    block-size: 1em;
+}
+
 :where(.nc-theme) .nc-checkbox {
     display: flex;
     align-items: center;
@@ -1136,4 +1149,7 @@
     /* Accent markers stay visible as system-colored borders; consumer colors do not survive forced colors (§10.3.3). */
     :where(.nc-theme) .nc-item-accent,
     :where(.nc-theme) .nc-source-accent { color: CanvasText; }
+
+    /* The pending marker is a shape in the item's system text color; it needs no pattern next to the dashed continuations. */
+    :where(.nc-theme) .nc-item-pending { color: ButtonText; }
 }

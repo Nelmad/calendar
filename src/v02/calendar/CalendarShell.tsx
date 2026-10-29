@@ -1,4 +1,4 @@
-import {useId, type ReactNode} from 'react';
+import {useEffect, useId, useLayoutEffect, type ReactNode} from 'react';
 import type {LocalizedText as Text} from '../core/formatting.js';
 import type {CalendarProps, CalendarRootState} from '../reference.js';
 import type {CalendarSurface} from '../surface.js';
@@ -11,19 +11,26 @@ import {useBlockingReserve, useBlockSizeVariable} from './useStatusGeometry.js';
 import {classes, resolveClass as className} from './slots.js';
 import {themeName} from '../themes/neutral.js';
 
+const useClientLayoutEffect = typeof document === 'undefined' ? useEffect : useLayoutEffect;
 const named = ({text, lang}: {text: string; lang: string}) => ({'aria-label': text, lang});
 // Pure ISO arithmetic: the host clock and global Date are never read (a host may replace them).
 const weekCount = ({start, end}: {start: string; end: string}) => (dateToDay(end) - dateToDay(start)) / 7;
 
 /** Private shell. T11/T12 supply the real Month/agenda through this internal seam. */
-export function CalendarShell<I, S>({input, surface, renderView, renderToolbarControls, renderModeLine}: {
+export function CalendarShell<I, S>({input, surface, renderView, renderToolbarControls, renderModeLine, onController}: {
     input: CalendarProps<I, S>; surface?: CalendarSurface; renderView: (controller: CalendarController<I, S>, headingId: string) => ReactNode;
     /** Package controls after the navigation group, such as the source selector (§5.6). */
     renderToolbarControls?: (controller: CalendarController<I, S>) => ReactNode;
     /** The interaction mode line after the toolbar and its data-state banner, before the grid (#11 decision Q3); null for a viewer. */
     renderModeLine?: (controller: CalendarController<I, S>) => ReactNode;
+    /**
+     * Internal test seam: receives the committed controller after every commit, in every state, so tests reach APIs that
+     * have no input yet (the move requests of #10 before the input adapters). The public Calendar never passes it.
+     */
+    onController?: (controller: CalendarController<I, S>) => void;
 }) {
     const controller = useCalendarController(input, surface), {model, rootRef, viewRef, todayRef, statusRef, politeRef, urgentRef} = controller;
+    useClientLayoutEffect(() => { onController?.(controller); });
     const headingId = useId(), boundaryId = useId(), statusTextId = useId();
     const state: CalendarRootState = model.state;
     const statusKey = `${state.dataState.status}/${state.dataState.status === 'ready' ? '' : state.dataState.phase}`;

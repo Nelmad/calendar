@@ -1,7 +1,8 @@
 import type {CalendarDataState, CalendarProps, CalendarResolvedLayout, CalendarRootState, CalendarVisibleRange} from '../reference.js';
 import {createDateAdapter} from '../core/date.js';
 import {createIntervalProjector} from '../core/projection.js';
-import {validateConfiguration, validateRecords, type ConfigurationResult, type ValidatedRecords} from '../core/validation.js';
+import {validateConfiguration, validateMoveStates, validateRecords, type ConfigurationResult, type ValidatedRecords} from '../core/validation.js';
+import {observeMoveStates, type MoveObservation, type MoveRegistry} from '../core/moveRequests.js';
 import {resolveLocale, type ResolvedLocale} from '../core/locale.js';
 import {contractMessages, createMessages} from '../core/messages.js';
 import {createDateFormatting, getCalendarVisibleRange} from '../core/formatting.js';
@@ -48,13 +49,16 @@ function contractModel(configuration: ContractConfiguration, input: Pick<Calenda
     return {kind: 'contract', state, messages, lang: messages.lang, blocking: true, diagnostics: configuration.diagnostics as readonly ControllerDiagnostic[]} as const;
 }
 type Visible<I, S> = ReadonlyMap<string, ValidatedRecords<I, S>['visibleItems'][number]>;
+/** The move states of one counted commit (#10): the accepted records, this mount's transitions and the snapshot's record diagnostics. */
+export type MoveStatesModel = MoveObservation & Readonly<{diagnostics: readonly ControllerDiagnostic[]}>;
 function dataModel<I, S>(props: CalendarProps<I, S>, state: DataState, locale: ResolvedLocale, catalog: Catalog, range: CalendarVisibleRange, blocking: boolean,
     records: ValidatedRecords<I, S>, index: Index<I, S> | null, format: ReturnType<typeof createDateFormatting>, diagnostics: readonly ControllerDiagnostic[],
-    actions: ActionResolver<I>, visible: Visible<I, S>, appearance: AppearanceResolver<I, S>) {
+    actions: ActionResolver<I>, visible: Visible<I, S>, appearance: AppearanceResolver<I, S>, moves: MoveStatesModel | null) {
     // `visible`: the records that passed the accepted filter, by ID; `actions`: their committed consumer action sets (§5.5);
     // `appearance`: one resolved item appearance for all segments and the agenda row (§10.3.3).
+    // `moves`: null without the move pair, so the issuer machine pauses and nothing is pending.
     return {kind: 'data', props, state, lang: locale.locale, locale, message: catalog.message, drainDiagnostics: catalog.drain, range, month: monthStart(props.anchorDate),
-        blocking, records, index, hasItems: index?.days.some(day => day.itemCount > 0) ?? false, format, diagnostics, actions, visible, appearance} as const;
+        blocking, records, index, hasItems: index?.days.some(day => day.itemCount > 0) ?? false, format, diagnostics, actions, visible, appearance, moves} as const;
 }
 export type CalendarDataModel<I, S> = ReturnType<typeof dataModel<I, S>>;
 export type CalendarModel<I, S> = ReturnType<typeof contractModel> | CalendarDataModel<I, S>;
@@ -105,15 +109,23 @@ export function createCalendarModel(services: Services) {
     const appearance = memoize((getItemAppearance: CalendarProps['getItemAppearance'], timeZone: string) => createAppearanceResolver(getItemAppearance, timeZone));
     const visibleById = memoize((validated: ValidatedRecords<unknown, unknown>) => new Map(validated.visibleItems.map(record => [record.item.id, record])));
     const format = memoize((resolved: ResolvedLocale, timeZone: string) => createDateFormatting(resolved, timeZone, services.dates));
+    // Keyed on the snapshot identity and the registry revision: an unrelated render neither validates again nor warns
+    // again. Reading the registry here only reads it; its phases change in the commit, and a step applied once is a
+    // fixpoint, so a step reused after its own commit still describes the current phases.
+    const moves = memoize((states: readonly unknown[], registry: MoveRegistry, _revision: number): MoveStatesModel => {
+        const validated = validateMoveStates(states, registry.issued);
+        return {...observeMoveStates(registry.entries(), validated.states), diagnostics: validated.diagnostics};
+    });
     const state = memoize((dataState: CalendarDataState, layout: CalendarResolvedLayout, density: CalendarProps['density'], colorScheme: CalendarProps['colorScheme'],
         dir: ResolvedLocale['dir']): DataState => ({kind: 'data', dataState, layout, density: density ?? 'compact', colorScheme: colorScheme ?? 'system', dir}));
     const data = memoize((props: CalendarProps<unknown, unknown>, root: DataState, resolved: ResolvedLocale, messages: Catalog, visible: CalendarVisibleRange, blocking: boolean,
         validated: ValidatedRecords<unknown, unknown>, layout: Index<unknown, unknown> | null, formatting: ReturnType<typeof createDateFormatting>,
         configuration: readonly ControllerDiagnostic[], themeDiagnostics: readonly ControllerDiagnostic[], resolver: ActionResolver<unknown>, byId: Visible<unknown, unknown>,
-        colors: AppearanceResolver<unknown, unknown>) =>
+        colors: AppearanceResolver<unknown, unknown>, moveStates: MoveStatesModel | null) =>
         dataModel(props, root, resolved, messages, visible, blocking, validated, layout, formatting, [...configuration, ...resolved.diagnostics, ...messages.diagnostics,
-            ...validated.diagnostics, ...themeDiagnostics, ...(layout?.diagnostics.map(value => ({path: 'sortItems', reason: value.reason})) ?? [])], resolver, byId, colors));
-    return function calendarModel<I, S>(input: CalendarProps<I, S>, layout: CalendarResolvedLayout = 'mobile'): CalendarModel<I, S> {
+            ...validated.diagnostics, ...themeDiagnostics, ...(layout?.diagnostics.map(value => ({path: 'sortItems', reason: value.reason})) ?? [])], resolver, byId, colors, moveStates));
+    /** `registry`: this mount's move request registry; without it (a viewer fixture) the move pair observes nothing. */
+    return function calendarModel<I, S>(input: CalendarProps<I, S>, layout: CalendarResolvedLayout = 'mobile', registry?: MoveRegistry): CalendarModel<I, S> {
         const configuration = configure(input as CalendarProps<unknown, unknown>);
         if (configuration.kind === 'contract') return contract(configuration, input.locale, input.messagesLocale, input.dir, input.messages);
         const props = configuration.props, resolved = locale(props.locale, props.firstDayOfWeek, props.hourCycle, props.dir);
@@ -125,6 +137,7 @@ export function createCalendarModel(services: Services) {
         return data(props, state(dataState, layout, props.density, props.colorScheme, resolved.dir), resolved, messages, visible, blocking, validated,
             layoutIndex, format(resolved, props.timeZone), configuration.diagnostics, tokens(props.tokens),
             actions(props.onItemActionRequest ? props.getItemActions as CalendarProps['getItemActions'] : undefined), visibleById(validated),
-            appearance(props.getItemAppearance as CalendarProps['getItemAppearance'], props.timeZone)) as unknown as CalendarDataModel<I, S>;
+            appearance(props.getItemAppearance as CalendarProps['getItemAppearance'], props.timeZone),
+            props.itemMoveStates && registry ? moves(props.itemMoveStates, registry, registry.revision()) : null) as unknown as CalendarDataModel<I, S>;
     };
 }

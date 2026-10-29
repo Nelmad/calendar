@@ -322,6 +322,14 @@ const laterOnlyMessages = {
     selectionCancelledAnnouncement: 'speech of a cancelled range draft (beta.1)',
     selectionCompletedAnnouncement: 'speech of an accepted selection request (beta.1)',
     selectionClearedAnnouncement: 'speech of an accepted Clear selection request (beta.1)',
+    pendingStateLabel: 'the agenda row state of an item with an accepted pending move, only with the move pair (beta.1)',
+    movePendingAnnouncement: 'speech of the first committed pending of a move request this Calendar issued (beta.1)',
+    moveSucceededAnnouncement: 'speech of the first committed succeeded of a move request this Calendar issued (beta.1)',
+    moveRejectedAnnouncement: 'speech of the first committed rejected of a move request this Calendar issued (beta.1)',
+    moveCancelledAnnouncement: 'speech of a move draft cancelled automatically, only with the move pair (beta.1)',
+    moveItemUnavailableReason: 'the reason of a move draft cancelled because its item is gone or pending (beta.1)',
+    moveItemChangedReason: 'the reason of a move draft cancelled because its item interval changed (beta.1)',
+    moveTimeZoneChangedReason: 'the reason of a move draft cancelled because the calendar time zone changed (beta.1)',
 };
 function renderedMessages() {
     const files = [], visit = directory => {

@@ -122,6 +122,21 @@ describe('stable data-* attributes (§5.7, R60)', () => {
         expect(screen.getByRole('dialog')).toHaveAttribute('data-presentation', 'sheet');
         audit();
     });
+    it('data-pending is "true" exactly on the item wrappers of an item with an accepted pending move: inline and popover agenda rows (#10)', async () => {
+        const user = userEvent.setup();
+        const input = (overrides: Partial<CalendarProps> = {}) => ({...props(), itemMoveStates: [{requestId: 'r1', itemId: 'a', status: 'pending'}, {requestId: 'r2', itemId: 'b', status: 'succeeded'}],
+            onItemMoveRequest() {}, ...overrides}) as unknown as CalendarProps;
+        const view = render(<CalendarMonth {...input({layout: 'mobile'})}/>);
+        expect(audit().has('item:data-pending')).toBe(true);
+        expect(document.querySelector('li[data-item-id="a"]')).toHaveAttribute('data-pending', 'true');
+        view.unmount();
+        render(<CalendarMonth {...input()}/>);
+        act(() => cell('2026-03-04').focus()); await user.keyboard('{Enter}');
+        const found = audit();
+        expect(found.has('item:data-pending')).toBe(true);
+        expect([...document.querySelectorAll('[data-pending]')].map(node => (node as HTMLElement).dataset.itemId)).toEqual(['a']);
+        expect(screen.getByRole('dialog').querySelector('li[data-item-id="a"]')).toHaveAttribute('data-pending', 'true');
+    });
     it('two themes and their portals never mix scoped values', async () => {
         const user = userEvent.setup();
         render(<><Calendar {...props({id: 'a', 'aria-label': 'A'})}/>
