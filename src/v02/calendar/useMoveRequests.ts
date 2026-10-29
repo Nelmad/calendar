@@ -109,17 +109,20 @@ export function useMoveRequests<I, S>(model: CalendarModel<I, S>, {registry, ove
     /**
      * Issues one request in one synchronous handler: register it, call `onItemMoveRequest` once, then send the paired `null`
      * from `finally`. A throwing callback or missing Web Crypto propagates after that `null` (decisions Q6 and Q7). Returns the
-     * request ID, or null when refused (no move pair, a blocking state, a blocked item, no open draft of the item, or a
-     * submit inside `onItemMoveRequest`).
+     * request ID, or null when refused (no move pair, a blocking state, a blocked item, no open draft of the item, a proposal
+     * not built from the latest committed item, or a submit inside `onItemMoveRequest`).
      */
     const submit = (proposal: CalendarMoveProposal<I>): string | null => {
         const latest = current(), itemId = proposal.item.id, open = draftRef.current;
-        // Only an open draft of the item is confirmed: a cancelled draft stays cancelled, so a proposal built before #9's
-        // invalidation or an observed pending ended its draft never issues a request with a stale item and interval, and a
-        // request always follows the draft start that told the consumer which item to retain. A submit inside
-        // onItemMoveRequest finds no open draft (it was handed off, and startDraft refuses there), so the first handoff keeps
-        // the paired null until its finally.
+        // Only an open draft of the item is confirmed: a cancelled draft stays cancelled, and a request always follows the
+        // draft start that told the consumer which item to retain. A submit inside onItemMoveRequest finds no open draft (it
+        // was handed off, and startDraft refuses there), so the first handoff keeps the paired null until its finally.
         if (!latest || !alive.current || !open || open.itemId !== itemId || blocked(latest, itemId)) return null;
+        // The request carries the latest committed item and its exact interval. #9's final check at confirm builds the
+        // proposal from that record, so a proposal kept from before a committed change of the item (in this draft or an
+        // earlier one) is refused rather than sent with a stale item and interval.
+        const record = latest.visible.get(itemId);
+        if (record?.item !== proposal.item || proposal.previousInterval !== proposal.item.interval) return null;
         // The draft is handed off before the request: a render inside onItemMoveRequest sees no open draft to cancel.
         detach();
         // The null owed for this draft, settled by the finally whatever the callback does in between.

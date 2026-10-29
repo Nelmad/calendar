@@ -655,6 +655,29 @@ describe.each([false, true])('scenario 8: the draft retention lifecycle (StrictM
         expect(log.read()).toEqual(['draft:a', 'request:a', 'draft:null']);
         expect(log.requests).toHaveLength(1); expect(log.requests[0].item).toBe(changed); expect(log.requests[0].previousInterval).toBe(changed.interval);
     });
+    it('a proposal not built from the latest committed item is refused, also by a later draft of the same item', () => {
+        const log = recorder(), view = render(draw(<Month {...moving(log)}/>));
+        const stale = proposal(startDraft('a')!, '2026-09-05');
+        const changed = {...alpha, interval: {kind: 'allDay' as const, start: '2026-09-04', end: '2026-09-05'}};
+        view.rerender(draw(<Month {...moving(log, [], {items: [changed, beta]})}/>));
+        expect(log.read()).toEqual(['draft:a', 'draft:null']); live.read();
+        // A new draft of the same item is open, but the kept proposal names the old item object and interval.
+        const draft = startDraft('a')!, older = proposal(draft, '2026-09-06');
+        let refused: (string | null)[] = [];
+        act(() => { refused = [move().submit(stale)]; });
+        // A title-only change keeps the draft open and replaces the item object: a proposal built before it is refused too.
+        const renamed = {...changed, title: 'Alpha renamed'};
+        view.rerender(draw(<Month {...moving(log, [], {items: [renamed, beta]})}/>));
+        act(() => { refused.push(move().submit(older), move().submit({...proposal(draft, '2026-09-06'), previousInterval: {...renamed.interval}})); });
+        expect(refused).toEqual([null, null, null]); expect(log.request).not.toHaveBeenCalled();
+        expect(log.read()).toEqual(['draft:a']); expect(move().draft).toBe(draft); expect(move().isBlocked('a')).toBe(false);
+        expect(live.read()).toEqual([]); expect(moveWarnings()).toEqual([]);
+        // The open draft still confirms with the proposal of the latest item.
+        let id: string | null = null;
+        act(() => { id = move().submit(proposal(draft, '2026-09-06')); });
+        expect(id).toMatch(v4); expect(log.read()).toEqual(['request:a', 'draft:null']);
+        expect(log.requests[0].item).toBe(renamed); expect(log.requests[0].previousInterval).toBe(renamed.interval);
+    });
     it('a draft started inside onItemMoveRequest is refused, also when the handed-off draft owed no null', () => {
         const log = recorder(), nested: (MoveDraft | null)[] = [];
         const props = (onDraft?: (itemId: string | null) => void) => moving(log, [], {onItemMoveDraftChange: onDraft,
