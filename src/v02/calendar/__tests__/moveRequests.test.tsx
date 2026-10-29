@@ -950,15 +950,6 @@ describe('scenario 12: the pending marker and the agenda label (decisions Q9 and
         expect(row('b')!.textContent).toMatch(/^BetaMove pending · .+ · Work$/);
         expect(row('b')!.querySelector('.nc-item-pending')).not.toBeNull();
     });
-    it('Q10: the desktop popover is the wider one exactly while the move pair is present (its width is checked in Chrome)', async () => {
-        const user = userEvent.setup(), log = recorder(), desktop = {layout: 'desktop', agendaDate: undefined, onAgendaDateChange: undefined};
-        const view = render(<Month {...moving(log, states, desktop)}/>);
-        act(() => screen.getAllByRole('gridcell').find(node => node.dataset.date === '2026-09-03')!.focus()); await user.keyboard('{Enter}');
-        const popover = () => screen.getByRole('dialog').closest('.nc-agenda-popover');
-        expect(popover()).toHaveClass('nc-popover', 'nc-agenda-popover', 'nc-agenda-popover-moves');
-        view.rerender(<Month {...base(desktop)}/>);
-        expect(popover()).toHaveClass('nc-popover', 'nc-agenda-popover'); expect(popover()).not.toHaveClass('nc-agenda-popover-moves');
-    });
     it('server markup with a pending item equals the first client render: the hydrated row keeps its marker and label without a mismatch', () => {
         const log = recorder(), props = moving(log, states);
         const html = renderToString(<CalendarMonth {...props}/>), container = document.body.appendChild(document.createElement('div'));

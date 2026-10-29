@@ -873,14 +873,6 @@
     inline-size: 24em;
 }
 
-/* With the move pair (#10), a row also holds the pending label at the start of its details and the marker at its
-   inline end. The wider popover keeps a short timed row with its date, times, source and actions trigger on one details
-   line when its item becomes pending (decision Q10), with room for wide system fonts such as DejaVu Sans. */
-.nc-theme.nc-agenda-popover-moves {
-    inline-size: 34em;
-    max-inline-size: min(34em, calc(100vw - 32px));
-}
-
 :where(.nc-theme) .nc-day-list[data-presentation="popover"] {
     min-block-size: 0;
     max-block-size: none;
