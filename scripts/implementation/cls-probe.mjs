@@ -120,8 +120,10 @@ export const scenarios = [
     {name: 'auto-host-inline-block', context: desktop, wrapper: 'host-inline-block', options: {}},
     {name: 'auto-host-absolute', context: desktop, wrapper: 'host-absolute', options: {}},
     {name: 'auto-host-max-content-track', context: desktop, wrapper: 'host-max-content', options: {}},
-    // On main the root content box stays below 640 px here, so hydration switches nothing.
-    {name: 'auto-host-inline-block-long-title', context: desktop, wrapper: 'host-inline-block', options: {longTitle: true}, layout: 'mobile', below: 640},
+    // On main the root content box stays below 640 px here, so hydration switches nothing. The title's width depends on the
+    // font system-ui resolves to (510 px on macOS, 578 px in a Verdana-like font, which would switch), so the host is capped
+    // at 660 px: a wider font wraps the title at a 628 px content box, still wider than the toolbar.
+    {name: 'auto-host-inline-block-long-title', context: desktop, wrapper: 'host-inline-block capped', options: {longTitle: true}, layout: 'mobile', below: 640},
     // The feedback-band hydration setup of responsive-probe.mjs: its fixture, classic scrollbars, a 645 px root content box
     // without a page scrollbar and a window height between the heights of both layouts at that width (measured first).
     {name: 'auto-feedback-band', band: true, wrapper: '', options: {fixture: 'band'}},
@@ -136,6 +138,7 @@ const pageCss = `body { margin: 0; font: 16px/1.4 system-ui; }
 .w1200 { inline-size: 1200px; }
 .large { font-size: 32px; }
 .host-inline-block { display: inline-block; }
+.capped { max-inline-size: 660px; }
 .host-absolute { position: absolute; }
 .host-max-content { display: grid; grid-template-columns: max-content; }
 `;
