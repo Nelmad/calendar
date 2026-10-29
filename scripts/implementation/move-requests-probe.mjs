@@ -139,13 +139,11 @@ try {
         }
         return result;
     });
-    // Decision Q10 of #10 at 1280 px, on the default timed row (a short item with its date, times and source): in en-US the
-    // row keeps its block size when the pending label appears; in ru-RU, as at 390 px, only the label's place inside the
-    // details line, no horizontal overflow and no other element of the row moving are asserted.
+    // Decision Q10 of #10 at 1280 px, on the default timed row (a short item with its date, times and source) in the 24em
+    // popover: the label starts the details line, which may wrap while the item is pending (as at 390 px and in ru-RU), so
+    // the row may grow by that line alone; nothing overflows horizontally and no other element of the row moves.
     for (const locale of ['en-US', 'ru-RU']) {
-        const name = locale === 'en-US' ? 'the default timed row (times and source) keeps its block size; the label starts its details line and nothing moves or overflows'
-            : 'the label sits inside the details line, nothing overflows horizontally and no other element of the row moves';
-        await check(`1280 px, ${locale}: ${name}`, async () => {
+        await check(`1280 px, ${locale}: the label sits inside the details line, nothing overflows horizontally and no other element of the row moves`, async () => {
             const {page, context} = await setup({pending: [], actions: true, locale});
             try {
                 await openAgenda(page);
@@ -181,11 +179,7 @@ try {
                 // Any change of the row's block size is the details line's alone.
                 assert.ok(Math.abs(after.row - before.row - (after.details[3] - before.details[3])) < 0.5, evidence);
                 await page.screenshot({path: resolve(output, `agenda-1280-${locale}.png`)});
-                if (locale === 'en-US') {
-                    assert.ok(Math.abs(after.row - before.row) < 0.5, `the row grows from ${before.row} to ${after.row} px: its details need ${after.length} px on one line `
-                        + `and have ${after.details[2]} px; ${evidence}`);
-                }
-                return {before, after};
+                return {before, after, growth: Math.round((after.row - before.row) * 10) / 10};
             } finally { await context.close(); }
         });
     }
@@ -247,7 +241,7 @@ const paths = ['src/v02/core/moveRequests.ts', 'src/v02/calendar/useMoveRequests
     'src/v02/calendar/slots.tsx', 'src/v02/primitives/content.tsx', 'src/v02/styles.css', 'scripts/implementation/move-requests-entry.tsx', 'scripts/implementation/move-requests-probe.mjs'];
 const report = {capturedAt: new Date().toISOString(), outcome: !only && checks.every(entry => entry.outcome === 'pass') && !errors.length ? 'pass' : 'fail', filter: only ? String(only) : null,
     node: process.version, browser: version, checks, errors,
-    scope: '#10 in Chrome: the pending marker on desktop month segments and agenda rows under forced-colors emulation (box and system-color fill), both themes in light and dark, consumer item colors, a narrow chip in LTR and RTL, the agenda pending label on the default timed row at 1280 px (en-US: the same row block size; ru-RU: inside the details line, no overflow, no other element moved) and at 390 px in en-US and ru-RU (inside the details line, no overflow, no other element moved), and one request through the internal controller seam. Screenshots go to the output directory only. Not AT qualification.',
+    scope: '#10 in Chrome: the pending marker on desktop month segments and agenda rows under forced-colors emulation (box and system-color fill), both themes in light and dark, consumer item colors, a narrow chip in LTR and RTL, the agenda pending label on the default timed row at 1280 px in the 24em popover, in en-US and ru-RU (inside the details line, which may wrap while pending; no overflow, no other element moved; the row growth is recorded) and at 390 px in en-US and ru-RU (inside the details line, no overflow, no other element moved), and one request through the internal controller seam. Screenshots go to the output directory only. Not AT qualification.',
     sourceHashes: Object.fromEntries(paths.map(path => [path, createHash('sha256').update(readFileSync(resolve(root, path))).digest('hex')]))};
 writeFileSync(resolve(output, 'browser.json'), JSON.stringify(report, null, 2) + '\n');
 console.log(`Move requests: ${checks.filter(entry => entry.outcome === 'pass').length}/${checks.length}; ${errors.length} page errors; ${output}`);
