@@ -32,8 +32,8 @@ function AgendaRow<I, S>({model, entry, index, id, date}: {model: CalendarDataMo
     const props = model.props, {item, source, title, interval} = entry.record, appearance = model.appearance.resolve(entry.record);
     const context: CalendarAgendaItemSlotContext<I, S> = {item, ...(source ? {source} : {}), view: 'agenda', date,
         isSelected: !!props.selection && date >= props.selection.start && date < props.selection.end, isDragging: false,
-        // §5.7: no primary and no action operation for this row (item moves come in a later prerelease). isPending follows
-        // the accepted move states only (#10).
+        // §5.7: no primary and no action operation for this row (item moves come in a later prerelease).
+        // isPending follows the accepted move states only (#10).
         isPending: !!model.moves?.pending.has(item.id), isDisabled: !props.onItemPress && !model.actions.resolve(item).actions.length};
     const times = interval.kind === 'allDay' ? model.format.range(interval) : model.format.timedRange(interval.start, interval.end);
     // Decision Q10 of #10: title, then the pending state, the times and the source on the details line; the state is

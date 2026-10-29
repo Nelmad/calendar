@@ -55,8 +55,8 @@ function dataModel<I, S>(props: CalendarProps<I, S>, state: DataState, locale: R
     records: ValidatedRecords<I, S>, index: Index<I, S> | null, format: ReturnType<typeof createDateFormatting>, diagnostics: readonly ControllerDiagnostic[],
     actions: ActionResolver<I>, visible: Visible<I, S>, appearance: AppearanceResolver<I, S>, moves: MoveStatesModel | null) {
     // `visible`: the records that passed the accepted filter, by ID; `actions`: their committed consumer action sets (§5.5);
-    // `appearance`: one resolved item appearance for all segments and the agenda row (§10.3.3). `moves`: null without the
-    // move pair, so the issuer machine pauses and nothing is pending.
+    // `appearance`: one resolved item appearance for all segments and the agenda row (§10.3.3).
+    // `moves`: null without the move pair, so the issuer machine pauses and nothing is pending.
     return {kind: 'data', props, state, lang: locale.locale, locale, message: catalog.message, drainDiagnostics: catalog.drain, range, month: monthStart(props.anchorDate),
         blocking, records, index, hasItems: index?.days.some(day => day.itemCount > 0) ?? false, format, diagnostics, actions, visible, appearance, moves} as const;
 }
