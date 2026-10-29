@@ -1,4 +1,4 @@
-import {Profiler, Suspense, lazy, type ReactNode} from 'react';
+import {Profiler, StrictMode, Suspense, lazy, type ReactNode} from 'react';
 import {hydrateRoot} from 'react-dom/client';
 import {renderToString} from 'react-dom/server';
 import {act} from '@testing-library/react';
@@ -10,8 +10,12 @@ const items = [{id: 'a', title: 'Alpha', data: {}, interval: {kind: 'allDay' as 
 const input = (): CalendarProps => ({items, timeZone: 'UTC', locale: 'en-US', today: '2026-09-03', anchorDate: '2026-09-01', onNavigate() {}});
 const tick = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// jsdom has no layout boxes: a connected root has one, as in a browser.
-beforeEach(() => { vi.spyOn(Element.prototype, 'getClientRects').mockImplementation(function (this: Element) { return (this.isConnected ? [{}] : []) as unknown as DOMRectList; }); });
+/** jsdom has no layout: like a browser, only a connected element without a display:none ancestor-or-self has a box. */
+function hasBox(element: Element) {
+    for (let node: Element | null = element; node; node = node.parentElement) if (node.ownerDocument.defaultView!.getComputedStyle(node).display === 'none') return false;
+    return element.isConnected;
+}
+beforeEach(() => { vi.spyOn(Element.prototype, 'getClientRects').mockImplementation(function (this: Element) { return (hasBox(this) ? [{}] : []) as unknown as DOMRectList; }); });
 afterEach(() => { vi.restoreAllMocks(); document.body.innerHTML = ''; });
 describe('hydration inside a Suspense boundary (QA-01, §11.3)', () => {
     it.each(['auto', 'desktop'] as const)('settles to idle with layout=%s and a suspending sibling', async layout => {
@@ -42,9 +46,42 @@ describe('hydration inside a Suspense boundary (QA-01, §11.3)', () => {
             expect(quiet).toBe(300);
             expect(errors).toEqual([]);
             expect(container.querySelector('.nc-calendar')).toHaveAttribute('data-layout', 'desktop');
+            expect(container.querySelector('[data-unmeasured]')).toBeNull();
             expect(container.textContent).toContain('loaded');
         } finally {
             await act(async () => root.unmount());
+        }
+    });
+});
+
+// Issue #20: the server's pre-size marker hydrates without a mismatch and the first width decision removes it, in the same
+// commit as the layout it decides, whatever that decision is.
+describe('the unmeasured marker at hydration', () => {
+    it.each([['a desktop width', {width: 900}, 'block', 'desktop'], ['a mobile width', {width: 320}, 'block', 'mobile'],
+        ['an unmeasurable root', {width: 900}, 'none', 'mobile']] as const)('is removed by the first decision for %s', async (_case, style, display, layout) => {
+        const props = {...input(), style};
+        // Each commit, read in the Profiler's layout phase: the layout and the marker it committed together.
+        const commits: string[] = [];
+        const app = () => <StrictMode><Profiler id="calendar" onRender={() => {
+            const root = container.querySelector<HTMLElement>('.nc-calendar')!;
+            commits.push(`${root.dataset.layout}${root.querySelector('.nc-calendar-view[data-unmeasured]') ? '+marker' : ''}`);
+        }}><Calendar {...props}/></Profiler></StrictMode>;
+        const html = renderToString(app());
+        expect(html).toContain('data-unmeasured="true"');
+        const container = document.createElement('div'); container.style.display = display; container.innerHTML = html; document.body.append(container);
+        const errors: unknown[] = [];
+        vi.spyOn(console, 'error').mockImplementation(value => { errors.push(value); });
+        let root: ReturnType<typeof hydrateRoot> | undefined;
+        try {
+            await act(async () => { root = hydrateRoot(container, app(), {onRecoverableError: value => errors.push(value)}); });
+            expect(errors).toEqual([]);
+            expect(container.querySelector('.nc-calendar')).toHaveAttribute('data-layout', layout);
+            expect(container.querySelector('[data-unmeasured]')).toBeNull();
+            // The hydration commit keeps the server state; the next commit has the decided layout and no marker.
+            expect(commits.slice(0, 2)).toEqual(['mobile+marker', layout]);
+            expect(commits.slice(1).every(commit => commit === layout)).toBe(true);
+        } finally {
+            await act(async () => root?.unmount());
         }
     });
 });

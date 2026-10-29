@@ -627,6 +627,22 @@ month does not call it. Focus rules are in the [README](../README.md#navigation)
   `mobileBreakpoint` or `layout` forgets the band. To avoid the
   feedback altogether, reserve the scrollbar space on the scrolling ancestor, for example
   `html { scrollbar-gutter: stable; }`: then both layouts measure the same width and the exact breakpoint always decides.
+  Near the breakpoint, a page scrollbar that only the desktop height needs can also stay on the server paint until the
+  first measurement (see the next item); the same rule avoids it.
+- Hydration and layout shift. In a container whose width does not depend on the calendar's content, and with the
+  server's inline styles applied, hydration without a layout switch moves nothing. The one exception is large text: the
+  first desktop measurement can still grow the rows a little. With the default `mobileBreakpoint`, the stylesheet also
+  sizes the server's compact month like the desktop month while the root's content box is at least 640 px wide (672 px
+  for the root with the default padding): desktop row heights, and no inline agenda until the first measurement. The
+  DOM and `data-layout` stay mobile. The page below the calendar therefore does not move when it hydrates to desktop,
+  unless it hydrates in an initial blocking state (`loading/initial`, `error/initial`): that skeleton or error region is
+  not pre-sized and still grows once to the desktop month's height. Under a policy that blocks style attributes, only
+  the hidden agenda applies before hydration (see
+  [Strict CSP with SSR](../README.md#limitations)). Without JavaScript such a calendar shows the compact grid at desktop
+  row height and no agenda. In a shrink-to-fit host (an inline-block or absolutely positioned wrapper without a width, a
+  `max-content` grid track) its server paint is only as wide as its toolbar until the first measurement, so an inline
+  agenda wider than the toolbar can move the page once. With another `mobileBreakpoint` the server layout is not
+  pre-sized: an SSR page that needs zero shift passes a forced `layout` that matches the page.
 
 A forced `'desktop'` or `'mobile'` never observes the width and is already fixed in the server HTML. `data-layout` on the
 root is always the resolved `"desktop"` or `"mobile"`, never `"auto"`. Any other value is a contract error
@@ -678,7 +694,9 @@ the sheet and the backdrop does not count) close it and return focus to the date
   its rows inside the root, so it never paints over the page below.
 
 With [`layout="auto"`](#prop-layout) the server and the first client render show the compact mobile month without reading
-the window or the container. With `'auto'` it includes the inline agenda of the viewed date. With `'overlay'` it has no
+the window or the container. With `'auto'` it includes the inline agenda of the viewed date; with the default
+[`mobileBreakpoint`](#prop-mobilebreakpoint) and a root content box of at least 640 px, that agenda is in the markup but
+not displayed until the first measurement. With `'overlay'` it has no
 agenda: the sheet is closed, and after hydration neither a sheet (mobile) nor a popover (desktop) opens before a date is
 activated. A forced `layout` renders its own presentation already on the server.
 

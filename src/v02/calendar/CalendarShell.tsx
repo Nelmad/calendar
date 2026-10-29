@@ -109,7 +109,10 @@ export function CalendarShell<I, S>({input, surface, renderView, renderToolbarCo
         {(statusSlot || !!modeLine) && <>{statusSlot && loadingStatus()}{statusSlot && errorStatus()}{modeLine}</>}
         {/* QA-08: `aria-busy` marks the stale content only (the grid and an inline agenda); the live regions of the root and
             the progress region stay outside the busy subtree. */}
-        {model.kind === 'data' && !model.blocking && <div ref={viewRef} className="nc-calendar-view" lang={model.lang} data-month-heading={headingId}>
+        {/* `data-unmeasured` (internal, not a stable attribute): the server and first client render of a default `auto` calendar
+            until its first width decision; the stylesheet pre-sizes the compact month in a wide view meanwhile. */}
+        {model.kind === 'data' && !model.blocking && <div ref={viewRef} className="nc-calendar-view" lang={model.lang} data-month-heading={headingId}
+            data-unmeasured={controller.unmeasured || undefined}>
             {placement === 'progress' && loadingStatus()}
             {renderView(controller, headingId)}
             {state.dataState.status === 'ready' && !model.hasItems && <div role="region" {...named(model.message('emptyLabel'))} className={statusClass}>
