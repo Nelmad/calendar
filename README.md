@@ -353,7 +353,22 @@ presentation; focus anywhere else is never taken, and a resize alone never opens
 on the layout itself, such as a page scrollbar that only the taller desktop month needs, switches the layout once per
 crossing and then keeps it while the width stays within that scrollbar's band; the rule is in the
 [API reference](docs/api.md#prop-layout). To avoid that band, reserve the scrollbar space on the scrolling ancestor, for
-example `html { scrollbar-gutter: stable; }`.
+example `html { scrollbar-gutter: stable; }`. Near the breakpoint, a page scrollbar that only the desktop height needs can
+also stay on the server paint until the first measurement; the same rule avoids it.
+
+In a container whose width does not depend on the calendar's content, and with the server's inline styles applied,
+hydration without a layout switch moves nothing; only large text can let the first desktop measurement grow the rows a
+little. With the default `mobileBreakpoint`, the stylesheet sizes the server's compact month like the desktop month when
+the root's content box is at least 640 px wide (672 px for the root with the default padding): desktop row heights, and
+no inline agenda until the first measurement. The page below the calendar therefore does not move when it hydrates to
+desktop, unless it hydrates in an initial blocking state (`loading/initial`, `error/initial`): that skeleton or error
+region is not pre-sized and still grows once to the desktop month's height. Under a policy that blocks style attributes,
+only the hidden agenda applies before hydration (see
+[Known limitations](#limitations)). Without JavaScript such a calendar shows the compact grid at desktop row height and no
+agenda. In a shrink-to-fit host (an inline-block or absolutely positioned wrapper without a width, a `max-content` grid
+track) its server paint is only as wide as its toolbar until the first measurement, so an inline agenda wider than the
+toolbar can move the page once. With another `mobileBreakpoint` the server layout is not pre-sized: SSR pages that need
+zero shift pass a forced `layout` that matches the page.
 
 <a id="sizing"></a>
 ## Sizing
@@ -603,7 +618,9 @@ typed as unavailable).
   phone in landscape, the popover is only as tall as the space next to the date (it scrolls); `layout` follows width only.
 - **Strict CSP with SSR.** Without `style-src-attr 'unsafe-inline'` the server-rendered inline styles apply only after
   hydration (each blocked attribute is reported as a violation), the root `style` you pass stays blocked, and React Aria's
-  single `<style>` needs a nonce; see [Styles](#styles).
+  single `<style>` needs a nonce; see [Styles](#styles). The server pre-size of a wide `"auto"` calendar (see
+  [Responsive layout](#responsive)) takes its row heights from the grid's inline custom properties, so under such a policy
+  only its hidden agenda applies until hydration, and the rows still move then.
 - **SSR locale data.** The calendar uses the runtime's own `Intl` data, and Node's full ICU covers far more languages than
   Chrome. A locale the browser lacks resolves to `en-US` there (with a development warning in the browser only) while the
   server renders native text, so hydration fails and React re-renders on the client. Where the week data differs, the

@@ -24,10 +24,16 @@ function contentWidth(element: HTMLElement, window: Window) {
 /**
  * Render half of the resolver: no DOM, window or matchMedia reads. Server and the first client
  * render of `auto` are mobile; a forced layout is used directly and never needs a measurement.
+ * `unmeasured` marks the server and first client render of `auto` with the default breakpoint until the
+ * first width decision commits: the stylesheet then sizes that compact month like the desktop one in a view
+ * of at least the breakpoint. A render without those conditions ends it for good, as does any decision and
+ * `end` (a render that observes no width, such as a contract shell, so that valid props later are not pre-sized).
  */
-export function useResolvedLayout(requested: unknown) {
+export function useResolvedLayout(requested: unknown, breakpoint?: unknown) {
     const [measured, setMeasured] = useState<CalendarResolvedLayout | null>(null);
     const [carried, setCarried] = useState<CalendarResolvedLayout | null>(() => forced(requested) ? requested : null);
+    const presized = (requested === undefined || requested === 'auto') && (breakpoint === undefined || breakpoint === defaultMobileBreakpoint);
+    const [unmeasured, setUnmeasured] = useState(presized);
     // Derived state during render (React's documented pattern): a forced layout drops the auto
     // measurement and is carried over a later runtime forced → auto switch until the commit-time
     // read settles it: a valid width replaces it, an unmeasurable root drops it to mobile (§7).
@@ -35,8 +41,16 @@ export function useResolvedLayout(requested: unknown) {
         if (carried !== requested) setCarried(requested);
         if (measured !== null) setMeasured(null);
     }
-    const settle = useCallback((layout: CalendarResolvedLayout | null) => { if (layout) setMeasured(layout); else setCarried(null); }, []);
-    return {layout: resolveLayout(forced(requested) ? requested : 'auto', measured, carried), forced: forced(requested), settle};
+    if (unmeasured && !presized) setUnmeasured(false);
+    // Every decision ends the unmeasured phase in the same update as the layout it decides, also one that keeps mobile
+    // (a narrow or unmeasurable root), which changes no other state.
+    const settle = useCallback((layout: CalendarResolvedLayout | null) => {
+        setUnmeasured(false);
+        if (layout) setMeasured(layout); else setCarried(null);
+    }, []);
+    // Ends the phase without a decision, keeping a carried layout (settle(null) would drop it).
+    const end = useCallback(() => setUnmeasured(false), []);
+    return {layout: resolveLayout(forced(requested) ? requested : 'auto', measured, carried), forced: forced(requested), settle, end, unmeasured: unmeasured && presized};
 }
 /**
  * Commit half: only a valid `auto` configuration observes the root content box, with exactly one

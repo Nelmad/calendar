@@ -1,4 +1,4 @@
-import {StrictMode, useState} from 'react';
+import {Profiler, StrictMode, useState} from 'react';
 import {hydrateRoot} from 'react-dom/client';
 import {renderToString} from 'react-dom/server';
 import {act, fireEvent, render, screen, within} from '@testing-library/react';
@@ -172,6 +172,74 @@ describe('container-based auto layout (§7, R54)', () => {
             await userEvent.setup().click(cell());
             expect(container.ownerDocument.querySelector('[data-presentation]')).toHaveAttribute('data-presentation', layout === 'mobile' ? 'sheet' : 'popover');
         } finally { act(() => hydrated?.unmount()); error.mockRestore(); container.remove(); }
+    });
+});
+
+// Issue #20: the internal pre-size marker exists from the first render until the first width decision of a default `auto`
+// calendar, and a mounted calendar never gets it back.
+describe('the unmeasured marker of the view', () => {
+    const marked = () => document.querySelectorAll('[data-unmeasured]').length;
+    /** Every commit, read in the Profiler's layout phase: the committed layout with `+marker` while the view carries it. */
+    function commits() {
+        const list: string[] = [];
+        const onRender = () => {
+            const node = document.querySelector<HTMLElement>('.nc-calendar');
+            if (node) list.push(`${node.dataset.layout}${node.querySelector('.nc-calendar-view[data-unmeasured]') ? '+marker' : ''}`);
+        };
+        return {list, onRender};
+    }
+    it.each([[900, 'desktop'], [320, 'mobile']] as const)('the first client render carries it; the first decision (%s px) removes it in the commit of its layout', (width, layout) => {
+        const {list, onRender} = commits();
+        render(<Profiler id="calendar" onRender={onRender}><Calendar {...input()} style={{width}}/></Profiler>);
+        expect(list.slice(0, 2)).toEqual(['mobile+marker', layout]); expect(marked()).toBe(0);
+    });
+    it('an unmeasurable root removes it with its first decision too, and stays mobile until measured', () => {
+        const {list, onRender} = commits();
+        const view = render(<div style={{display: 'none'}}><Profiler id="calendar" onRender={onRender}><Calendar {...input()} style={{width: 900}}/></Profiler></div>);
+        expect(list.slice(0, 2)).toEqual(['mobile+marker', 'mobile']); expect(marked()).toBe(0);
+        view.rerender(<div><Profiler id="calendar" onRender={onRender}><Calendar {...input()} style={{width: 900}}/></Profiler></div>); observe(900);
+        expect(root()).toHaveAttribute('data-layout', 'desktop'); expect(marked()).toBe(0);
+    });
+    it.each([{layout: 'desktop'}, {layout: 'mobile'}, {mobileBreakpoint: 900}, {mobileBreakpoint: 641}])('never appears for %o', extra => {
+        const {list, onRender} = commits();
+        render(<Profiler id="calendar" onRender={onRender}><Calendar {...{...input(), ...extra, style: {width: 1000}} as CalendarProps}/></Profiler>);
+        expect(list.length).toBeGreaterThan(0); expect(list.some(commit => commit.endsWith('+marker'))).toBe(false);
+    });
+    it('never appears after a runtime forced → auto switch, also while the forced layout is carried', () => {
+        const {list, onRender} = commits(), page = (layout?: 'desktop') => <Profiler id="calendar" onRender={onRender}><Calendar {...input()} layout={layout} style={{width: 300}}/></Profiler>;
+        const view = render(page('desktop'));
+        view.rerender(page()); expect(root()).toHaveAttribute('data-layout', 'mobile');
+        expect(list.some(commit => commit.endsWith('+marker'))).toBe(false);
+    });
+    it.each([[900, 'desktop'], [320, 'mobile']] as const)('never appears once a calendar mounted as a contract shell gets valid props (%s px)', (width, layout) => {
+        // A contract shell has no view and observes no width; the data render after it is not the first client render.
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const {list, onRender} = commits(), page = (timeZone: string) => <StrictMode><Profiler id="calendar" onRender={onRender}>
+            <Calendar {...input()} timeZone={timeZone} style={{width}}/></Profiler></StrictMode>;
+        const view = render(page('Mars/Olympus_Mons'));
+        expect(document.querySelector('.nc-calendar-view')).toBeNull();
+        view.rerender(page('UTC'));
+        expect(root()).toHaveAttribute('data-layout', layout); expect(marked()).toBe(0);
+        expect(list.some(commit => commit.endsWith('+marker'))).toBe(false);
+    });
+    it('never comes back after resizes, breakpoint and layout changes, navigation, a data-state change or a StrictMode replay', () => {
+        // An attribute record without an old value is an addition.
+        const additions: string[] = [], added = (records: MutationRecord[]) => { for (const record of records) if (record.oldValue === null) additions.push((record.target as Element).className); };
+        const mutations = new MutationObserver(added);
+        mutations.observe(document.body, {subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ['data-unmeasured']});
+        const page = (extra: object = {}) => <StrictMode><Calendar {...{...input(), style: {width: 900}, ...extra} as CalendarProps}/></StrictMode>;
+        const view = render(page());
+        try {
+            expect(root()).toHaveAttribute('data-layout', 'desktop'); expect(marked()).toBe(0);
+            resize(639); resize(640); resize(0); resize(1200);
+            for (const extra of [{mobileBreakpoint: 900}, {mobileBreakpoint: 640}, {}, {layout: 'mobile'}, {layout: 'auto'}, {}, {anchorDate: '2026-04-01'},
+                {dataState: {status: 'loading', phase: 'initial'}}, {dataState: {status: 'ready'}}]) {
+                view.rerender(page(extra)); expect(marked(), JSON.stringify(extra)).toBe(0);
+            }
+            expect(screen.getByRole('grid')).toBeInTheDocument();
+            added(mutations.takeRecords());
+            expect(additions).toEqual([]);
+        } finally { mutations.disconnect(); }
     });
 });
 
