@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event';
 import {afterEach, beforeEach, describe, expect, it, vi, type MockInstance} from 'vitest';
 import type {CalendarItem, CalendarMoveInput, CalendarMoveRequest, CalendarMoveState, CalendarProps} from '../../reference.js';
 import {createDateAdapter} from '../../core/date.js';
-import {evaluateMoveTarget, type MoveDraft} from '../../core/move.js';
+import {evaluateMoveTarget, startMoveDraft, type MoveDraft} from '../../core/move.js';
 import {missingCryptoMessage} from '../../core/moveRequests.js';
 import {CalendarMonth, CalendarMonthRoot} from '../CalendarMonth.js';
 import type {CalendarController} from '../useCalendarController.js';
@@ -331,6 +331,8 @@ describe.each([false, true])('scenario 5: the handoff with a synchronous store, 
                     // Retention moves from the draft to the request record in the same call.
                     store.set({requests: new Set([...store.get().requests, request.item.id])});
                     onRequest?.(store, request);
+                    // After the consumer's body: a null logged before this was sent while the request was on the stack.
+                    log.events.push('request-returned');
                 }})}/>;
         }
         const view = render(wrap(<Consumer/>, strict));
@@ -344,7 +346,7 @@ describe.each([false, true])('scenario 5: the handoff with a synchronous store, 
         expect(log.read()).toEqual(['draft:a', 'navigate:2026-10-01']);
         expect(items(store.get()).map(item => item.id)).toEqual(['a']);
         act(() => { move().submit(proposal(draft!, '2026-10-05')); });
-        expect(log.read()).toEqual(['request:a', 'draft:null']);
+        expect(log.read()).toEqual(['request:a', 'request-returned', 'draft:null']);
         expect(present).toEqual(['draft:a:true', 'request:true', 'draft:null:true']);
         expect(store.get()).toMatchObject({draft: null}); expect(items(store.get()).map(item => item.id)).toEqual(['a']);
         expect(move().isBlocked('a')).toBe(true);
@@ -352,8 +354,28 @@ describe.each([false, true])('scenario 5: the handoff with a synchronous store, 
     it('the null arrives exactly once when onItemMoveRequest unmounts the Calendar through flushSync', () => {
         const {log} = setup(store => { flushSync(() => store.set({mounted: false})); });
         submitMove('a');
-        expect(log.read()).toEqual(['draft:a', 'request:a', 'draft:null']);
+        // The unmount inside the request sees the handoff and leaves the null to submit's finally, after the request returned.
+        expect(log.read()).toEqual(['draft:a', 'request:a', 'request-returned', 'draft:null']);
         expect(document.querySelector('.nc-calendar')).toBeNull(); expect(live.read()).toEqual([]); expect(moveWarnings()).toEqual([]);
+    });
+    it('inside onItemMoveRequest a new draft and a second submit are refused; the one null still follows the request', () => {
+        const nested: string[] = [];
+        let other: ReturnType<typeof proposal> | null = null;
+        const {log, view} = setup(() => {
+            nested.push(`start:${move().startDraft('b') === null ? 'refused' : 'opened'}`, `submit:${move().submit(other!)}`);
+        });
+        act(() => {
+            // A valid proposal of another, unblocked item: only the missing open draft refuses it inside the request.
+            other = proposal(startMoveDraft(dataModel().visible.get('b')!, 'UTC', {kind: 'start'}), '2026-09-06');
+            move().submit(proposal(move().startDraft('a')!, '2026-09-05'));
+        });
+        expect(nested).toEqual(['start:refused', 'submit:null']);
+        expect(log.read()).toEqual(['draft:a', 'request:a', 'request-returned', 'draft:null']); expect(log.request).toHaveBeenCalledTimes(1);
+        expect(move().draft).toBeNull(); expect(move().isBlocked('b')).toBe(false);
+        // Nothing is left open or owed: the unmount sends nothing, and b can start a draft as usual before it.
+        expect(startDraft('b')).not.toBeNull(); act(() => { move().endDraft('cancel'); });
+        view.unmount();
+        expect(log.read()).toEqual(['draft:b', 'draft:null']);
     });
     it('decision Q6: a throwing onItemMoveRequest still sends one null, propagates the same error and keeps the request blocked', () => {
         const error = new Error('Store failed');
@@ -600,6 +622,41 @@ describe.each([false, true])('scenario 8: the draft retention lifecycle (StrictM
         render(draw(<Month {...moving(log)}/>));
         act(() => { move().startDraft('a'); controllers.get('main')!.navigateMonth(1); });
         expect(log.read()).toEqual(['draft:a', 'navigate:2026-10-01']);
+    });
+    it('a submit without an open draft of the item is refused: a draft an interval change cancelled stays cancelled', () => {
+        const log = recorder(), view = render(draw(<Month {...moving(log)}/>));
+        const draft = startDraft('a')!, stale = proposal(draft, '2026-09-05');
+        const changed = {...alpha, interval: {kind: 'allDay' as const, start: '2026-09-04', end: '2026-09-05'}};
+        view.rerender(draw(<Month {...moving(log, [], {items: [changed, beta]})}/>));
+        expect(log.read()).toEqual(['draft:a', 'draft:null']);
+        expect(live.read()).toEqual(['main urgent: Move of Alpha cancelled: Event time has changed']);
+        // The proposal of the cancelled draft; one built from the current item with no draft ever started (so no draft ID was
+        // published for the consumer to retain); one for an item while another item's draft is open.
+        const draftless = proposal(startMoveDraft(dataModel().visible.get('a')!, 'UTC', {kind: 'start'}), '2026-09-06');
+        const results: (string | null)[] = [];
+        act(() => { results.push(move().submit(stale), move().submit(draftless)); });
+        startDraft('b');
+        act(() => { results.push(move().submit(draftless)); move().endDraft('cancel'); });
+        expect(results).toEqual([null, null, null]); expect(log.request).not.toHaveBeenCalled();
+        expect(log.read()).toEqual(['draft:b', 'draft:null']); expect(move().isBlocked('a')).toBe(false);
+        expect(live.read()).toEqual([]); expect(moveWarnings()).toEqual([]);
+        // A new draft of the changed item confirms as usual, with the latest item and interval.
+        submitMove('a', '2026-09-06');
+        expect(log.read()).toEqual(['draft:a', 'request:a', 'draft:null']);
+        expect(log.requests).toHaveLength(1); expect(log.requests[0].item).toBe(changed); expect(log.requests[0].previousInterval).toBe(changed.interval);
+    });
+    it('a draft started inside onItemMoveRequest is refused, also when the handed-off draft owed no null', () => {
+        const log = recorder(), nested: (MoveDraft | null)[] = [];
+        const props = (onDraft?: (itemId: string | null) => void) => moving(log, [], {onItemMoveDraftChange: onDraft,
+            onItemMoveRequest: (request: CalendarMoveRequest) => { log.request(request); nested.push(move().startDraft('b')); }});
+        const view = render(draw(<Month {...props()}/>));
+        const draft = startDraft('a')!;
+        // A callback added mid-draft applies from the next draft only, so this handoff owes no null.
+        view.rerender(draw(<Month {...props(log.draft)}/>));
+        act(() => { move().submit(proposal(draft, '2026-09-05')); });
+        expect(nested).toEqual([null]); expect(log.read()).toEqual(['request:a']); expect(move().draft).toBeNull();
+        view.unmount();
+        expect(log.read()).toEqual([]);
     });
     it('a draft open at unmount gets one null; a draft already handed off gets none from the unmount', () => {
         const log = recorder(), view = render(draw(<Month {...moving(log)}/>));

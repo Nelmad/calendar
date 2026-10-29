@@ -81,10 +81,11 @@ export function useMoveRequests<I, S>(model: CalendarModel<I, S>, {registry, ove
      * Opens a draft of a visible, unblocked item, calling `onItemMoveDraftChange(itemId)` before it returns and before any
      * navigation the caller's draft causes. Returns the draft (built by #9 with the caller's origin), or null when refused.
      * A throwing callback opens nothing: the same identity gets its one `null`, and the error propagates (decision Q5).
+     * Refused inside `onItemMoveRequest`: a draft opened there would outlive the handoff whose `finally` owns the paired null.
      */
     const startDraft = (itemId: string, origin: MoveOrigin = startOrigin): MoveDraft | null => {
         const latest = current();
-        if (!latest || !alive.current || draftRef.current || retention.current || blocked(latest, itemId)) return null;
+        if (!latest || !alive.current || handoff.current || draftRef.current || retention.current || blocked(latest, itemId)) return null;
         const record = latest.visible.get(itemId);
         if (!record) return null;
         const draft = startMoveDraft(record, latest.props.timeZone, origin), callback = latest.props.onItemMoveDraftChange;
@@ -108,14 +109,21 @@ export function useMoveRequests<I, S>(model: CalendarModel<I, S>, {registry, ove
     /**
      * Issues one request in one synchronous handler: register it, call `onItemMoveRequest` once, then send the paired `null`
      * from `finally`. A throwing callback or missing Web Crypto propagates after that `null` (decisions Q6 and Q7). Returns the
-     * request ID, or null when refused (no move pair, a blocking state, a blocked item, or a draft of another item).
+     * request ID, or null when refused (no move pair, a blocking state, a blocked item, no open draft of the item, or a
+     * submit inside `onItemMoveRequest`).
      */
     const submit = (proposal: CalendarMoveProposal<I>): string | null => {
         const latest = current(), itemId = proposal.item.id, open = draftRef.current;
-        // A submit inside onItemMoveRequest is refused: the first handoff owns the paired null until its finally.
-        if (!latest || !alive.current || handoff.current || (open && open.itemId !== itemId) || blocked(latest, itemId)) return null;
+        // Only an open draft of the item is confirmed: a cancelled draft stays cancelled, so a proposal built before #9's
+        // invalidation or an observed pending ended its draft never issues a request with a stale item and interval, and a
+        // request always follows the draft start that told the consumer which item to retain. A submit inside
+        // onItemMoveRequest finds no open draft (it was handed off, and startDraft refuses there), so the first handoff keeps
+        // the paired null until its finally.
+        if (!latest || !alive.current || !open || open.itemId !== itemId || blocked(latest, itemId)) return null;
         // The draft is handed off before the request: a render inside onItemMoveRequest sees no open draft to cancel.
         detach();
+        // The null owed for this draft, settled by the finally whatever the callback does in between.
+        const owed = retention.current;
         handoff.current = true;
         try {
             // Inside the try: without Web Crypto nothing is registered or blocked, and the paired null still follows.
@@ -128,7 +136,7 @@ export function useMoveRequests<I, S>(model: CalendarModel<I, S>, {registry, ove
             return requestId;
         } finally {
             handoff.current = false;
-            settle(retention.current);
+            settle(owed);
         }
     };
 
