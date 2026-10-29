@@ -2,7 +2,7 @@ import {StrictMode, useState, useSyncExternalStore, type ReactNode} from 'react'
 import {flushSync} from 'react-dom';
 import {createRoot, hydrateRoot} from 'react-dom/client';
 import {renderToString} from 'react-dom/server';
-import {act, cleanup as cleanupRender, render, screen, within} from '@testing-library/react';
+import {act, cleanup as cleanupRender, fireEvent, render, screen, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {afterEach, beforeEach, describe, expect, it, vi, type MockInstance} from 'vitest';
 import type {CalendarItem, CalendarMoveInput, CalendarMoveRequest, CalendarMoveState, CalendarProps} from '../../reference.js';
@@ -286,26 +286,36 @@ describe('scenario 4: shared states, roots and remounts', () => {
                 `${prefix.replace(': ', '[0]: ')}Invalid move state or issuer itemId mismatch`]);
         } finally { act(() => roots.forEach(root => root.unmount())); containers.forEach(container => container.remove()); }
     });
+});
+
+describe.each([false, true])('scenario 4: remounts and prefixed IDs (StrictMode %s)', strict => {
     it('after a remount an old terminal is external: not announced, and it never acknowledges a new request', () => {
-        const log = recorder(), view = render(<Month {...moving(log)} key="first"/>);
+        const log = recorder(), view = render(wrap(<Month {...moving(log)} key="first"/>, strict));
         const old = submitMove('a');
-        view.rerender(<Month {...moving(log, [succeeded(old)])} key="first"/>);
+        expect(log.read()).toEqual(['draft:a', 'request:a', 'draft:null']);
+        view.rerender(wrap(<Month {...moving(log, [succeeded(old)])} key="first"/>, strict));
         expect(live.read()).toEqual(['main polite: Alpha moved']);
-        view.rerender(<Month {...moving(log, [succeeded(old)])} key="second"/>);
-        expect(live.read()).toEqual([]); expect(move().isBlocked('a')).toBe(false);
+        view.rerender(wrap(<Month {...moving(log, [succeeded(old)])} key="second"/>, strict));
+        expect(live.read()).toEqual([]); expect(move().isBlocked('a')).toBe(false); expect(log.read()).toEqual([]);
         const fresh = submitMove('a');
-        view.rerender(<Month {...moving(log, [succeeded(old)])} key="second"/>);
+        expect(fresh).not.toBe(old); expect(log.read()).toEqual(['draft:a', 'request:a', 'draft:null']);
+        view.rerender(wrap(<Month {...moving(log, [succeeded(old)])} key="second"/>, strict));
         expect(live.read()).toEqual([]); expect(move().isBlocked('a')).toBe(true);
-        view.rerender(<Month {...moving(log, [succeeded(old), succeeded(fresh)])} key="second"/>);
-        expect(live.read()).toEqual(['main polite: Alpha moved']); expect(moveWarnings()).toEqual([]);
+        view.rerender(wrap(<Month {...moving(log, [succeeded(old), succeeded(fresh)])} key="second"/>, strict));
+        view.rerender(wrap(<Month {...moving(log, [succeeded(old), succeeded(fresh)])} key="second"/>, strict));
+        expect(live.read()).toEqual(['main polite: Alpha moved']); expect(moveWarnings()).toEqual([]); expect(log.read()).toEqual([]);
     });
     it('a pending for tenant-a:42 does not block tenant-b:42', () => {
         const items = ['tenant-a:42', 'tenant-b:42'].map(id => ({...alpha, id, title: id}));
-        const log = recorder();
-        render(<Month {...moving(log, [{requestId: 'elsewhere', itemId: 'tenant-a:42', status: 'pending'}], {items})}/>);
+        const log = recorder(), states = [{requestId: 'elsewhere', itemId: 'tenant-a:42', status: 'pending'} as const];
+        const view = render(wrap(<Month {...moving(log, states, {items})}/>, strict));
         expect(move().isBlocked('tenant-a:42')).toBe(true); expect(move().isBlocked('tenant-b:42')).toBe(false);
         expect(startDraft('tenant-a:42')).toBeNull(); expect(startDraft('tenant-b:42')).not.toBeNull();
-        expect(log.read()).toEqual(['draft:tenant-b:42']); expect(live.read()).toEqual([]);
+        expect(log.read()).toEqual(['draft:tenant-b:42']);
+        // The external pending stays silent here, and the open draft of tenant-b:42 is not cancelled by it.
+        view.rerender(wrap(<Month {...moving(log, states, {items})}/>, strict));
+        expect(log.read()).toEqual([]); expect(move().draft?.itemId).toBe('tenant-b:42');
+        expect(live.read()).toEqual([]); expect(moveWarnings()).toEqual([]);
     });
 });
 
@@ -806,6 +816,25 @@ describe('scenario 11: results with other live output (decision Q8)', () => {
         expect(document.getElementById('issuer')!.closest('[inert], [aria-hidden="true"]')).toBeNull();
         expect(live.read()).toEqual(['issuer polite: Alpha moved', 'issuer urgent: Move of Beta rejected: Locked']);
         view.rerender(<StrictMode>{tree([succeeded(first), rejected(second, 'Locked', 'b')])}</StrictMode>);
+        expect(live.read()).toEqual([]);
+    });
+    it('the closing sheet\'s modality notification writes the owed result synchronously, before any attribute observer runs', async () => {
+        const user = userEvent.setup(), log = recorder();
+        const tree = (states: readonly CalendarMoveState[]) => <>
+            <CalendarMonth {...base({id: 'other', layout: 'mobile', agendaPresentation: 'overlay', agendaDate: undefined, onAgendaDateChange: undefined})}/>
+            <Month {...moving(log, states, {id: 'issuer'})}/></>;
+        const view = render(tree([]));
+        const id = submitMove('a');
+        await user.click(within(document.getElementById('other')!).getAllByRole('gridcell').find(node => node.dataset.date === '2026-09-04')!);
+        view.rerender(tree([succeeded(id)]));
+        live.read();
+        // One synchronous Escape: no microtask runs before the read below, so a MutationObserver (the one watching the
+        // issuer's ancestors included) has not been called yet. Only the package modal layer's close notification can write.
+        fireEvent.keyDown(document.activeElement!, {key: 'Escape'});
+        expect(document.querySelector('[role=dialog]')).toBeNull();
+        expect(live.read()).toEqual(['issuer polite: Alpha moved']);
+        // The attribute observer, once called, finds nothing owed and writes nothing more.
+        await act(async () => { await Promise.resolve(); });
         expect(live.read()).toEqual([]);
     });
     it('results owed under inert the package did not create are written once it is removed', async () => {
