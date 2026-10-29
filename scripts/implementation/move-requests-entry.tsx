@@ -19,8 +19,6 @@ export const items: CalendarItem[] = [
     {id: 'sync', title: 'Team sync', calendarId: 'work', data: {}, interval: {kind: 'timed', start: '2026-09-03T10:00:00Z', end: '2026-09-03T10:30:00Z'}},
     {id: 'review', title: 'Design review of the quarterly roadmap with every team', calendarId: 'work', data: {},
         interval: {kind: 'timed', start: '2026-09-03T14:00:00Z', end: '2026-09-03T15:00:00Z'}},
-    // A short timed item: a moment without a source, alone on its day.
-    {id: 'standup', title: 'Standup', data: {}, interval: {kind: 'timed', start: '2026-09-04T09:00:00Z'}},
 ];
 const dates = createDateAdapter();
 
