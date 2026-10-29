@@ -146,6 +146,18 @@ describe.each([false, true])('scenario 1: pending, then rejected, with unchanged
     });
 });
 
+describe('the title snapshot of a request', () => {
+    it('is taken before onItemMoveRequest; a later title does not change it, and a blank one speaks the current untitled label', () => {
+        const blank: CalendarItem = {...alpha, id: 'blank', title: ' '};
+        const log = recorder(), props = (states: readonly CalendarMoveState[], overrides: Options = {}) => moving(log, states, {items: [alpha, blank], ...overrides});
+        const view = render(<Month {...props([])}/>);
+        const [named, untitled] = [submitMove('a'), submitMove('blank')];
+        view.rerender(<Month {...props([pending(named), pending(untitled, 'blank')], {items: [{...alpha, title: 'Renamed'}, {...blank, title: 'Later title'}],
+            messages: {untitledItemLabel: 'No name'}})}/>);
+        expect(live.read()).toEqual(['main polite: Move of Alpha is pending Move of No name is pending']);
+    });
+});
+
 /** A synchronous external store, as a consumer with a state library would keep items and move states. */
 function createStore<T>(initial: T) {
     let state = initial;
@@ -267,6 +279,11 @@ describe('scenario 4: shared states, roots and remounts', () => {
             act(() => store.set({states: [succeeded(one), rejected(two, 'Moved elsewhere')]}));
             expect(live.read()).toEqual(['one polite: Alpha moved', 'two urgent: Move of Alpha rejected: Moved elsewhere']);
             expect(moveWarnings()).toEqual([]);
+            // Warnings are per instance too: the same invalid record warns once in each Calendar.
+            act(() => store.set({states: [{requestId: 'bad', itemId: 'a', status: 'moved'} as unknown as CalendarMoveState]}));
+            act(() => store.set({states: [{requestId: 'bad', itemId: 'a', status: 'moved'} as unknown as CalendarMoveState]}));
+            expect(moveWarnings()).toEqual([`${prefix.replace(': ', '[0]: ')}Invalid move state or issuer itemId mismatch`,
+                `${prefix.replace(': ', '[0]: ')}Invalid move state or issuer itemId mismatch`]);
         } finally { act(() => roots.forEach(root => root.unmount())); containers.forEach(container => container.remove()); }
     });
     it('after a remount an old terminal is external: not announced, and it never acknowledges a new request', () => {
