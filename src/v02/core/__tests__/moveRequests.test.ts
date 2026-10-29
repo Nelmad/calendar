@@ -90,7 +90,7 @@ describe('issuer sequences (#10 decisions Q1 and Q2)', () => {
         const steps = run([[pending], [], [pending], []]);
         expect(steps.flatMap(step => step.warned)).toEqual(['removed', 'readded', 'removed']);
         expect([...new Set(steps.flatMap(step => step.warned))]).toEqual(['removed', 'readded']);
-        expect(steps.at(-1)).toMatchObject({pending: false, blocked: true});
+        expect(steps[steps.length - 1]).toMatchObject({pending: false, blocked: true});
     });
     it('Q2: an excluded record of an issued ID is absent: pending → blank reason → Busy', () => {
         // validateMoveStates excludes the blank reason, so the machine sees no record in the second commit.

@@ -12,6 +12,8 @@ import {useToday} from './useToday.js';
 import {useRootName} from './useRootName.js';
 import {useLayoutObserver, useResolvedLayout} from './useResponsiveLayout.js';
 import {useSelection} from './useSelection.js';
+import {useMoveRequests} from './useMoveRequests.js';
+import {createMoveRegistry} from '../core/moveRequests.js';
 
 const useClientLayoutEffect = typeof document === 'undefined' ? useEffect : useLayoutEffect;
 const joined = (base: readonly LocalizedText[] | undefined, extra: readonly LocalizedText[] | undefined) => extra?.length ? [...base ?? [], ...extra] : base;
@@ -37,6 +39,8 @@ export function useCalendarController<I, S>(input: CalendarProps<I, S>, surface?
     const [services] = useState(() => createControllerServices(surface));
     // The model is memoized per instance by its real inputs: an unchanged render yields the same model (QA-01).
     const [calendarModel] = useState(() => createCalendarModel(services));
+    // This mount's move request registry: it lives until unmount and a new mount starts empty (#10).
+    const [moveRegistry] = useState(createMoveRegistry);
     // One overlay ownership tree (and live routing) and one portal-mirror hub per Calendar instance.
     // useId keeps the DOM ids of this Calendar's overlays unique among several Calendars (T17-V1-D3).
     const overlayPrefix = useId(), [overlays] = useState(() => createOverlayStack(overlayPrefix)), [mirror] = useState(createMirrorHub);
@@ -56,7 +60,7 @@ export function useCalendarController<I, S>(input: CalendarProps<I, S>, surface?
         if (!warnings.current.has(key)) { warnings.current.add(key); console.warn(`[@nelmad/calendar] ${path}: ${reason}`); }
     }, []);
     const responsive = useResolvedLayout(input.layout);
-    const model = calendarModel(input, responsive.layout);
+    const model = calendarModel(input, responsive.layout, moveRegistry);
     useLayoutObserver(rootRef, model.kind === 'data' && (model.props.layout ?? 'auto') === 'auto', responsive.forced, model.kind === 'data' ? model.props.mobileBreakpoint : undefined,
         responsive.layout, responsive.settle, mirror.notify);
     useMessageDiagnostics(model as CalendarModel<unknown, unknown>, warn);
@@ -99,7 +103,10 @@ export function useCalendarController<I, S>(input: CalendarProps<I, S>, surface?
     const getDateCell = useCallback((date: string) => cells.current.get(date), []);
     // Its commit effect runs before the one below, which merges the queued selection speech into its own payload.
     const selection = useSelection(model, {overlays, warn, rootRef, gridRef, weekdaysRef, getDateCell, focusDate, agendaDate: currentAgenda?.date ?? null});
-    const {take: takeSelection, flush: flushSelection, cancelDraft: cancelSelectionDraft} = selection;
+    const {take: takeSelection, cancelDraft: cancelSelectionDraft} = selection;
+    // Its commit effect also runs before the one below: transitions are applied and results owed before that payload.
+    const move = useMoveRequests(model, {registry: moveRegistry, overlays, warn});
+    const {take: takeMove, watch: watchMove} = move;
 
     useEffect(() => {
         const root = rootRef.current, document = root?.ownerDocument;
@@ -200,9 +207,11 @@ export function useCalendarController<I, S>(input: CalendarProps<I, S>, surface?
         // completion, so the next completion is a new payload, not the same text again (QA-D-4-02); a month stays.
         const politePayload = urgent.length ? [] : refreshStart && !polite.length ? completionShown.current ? [] : undefined : polite;
         if (changedStatus || polite.length || urgent.length) {
-            // One DOM mutation per channel: selection speech queued for this commit joins this payload instead of replacing it.
-            const own = takeSelection();
-            overlays.announce(joined(politePayload, own.polite), joined(urgent, own.urgent));
+            // One DOM mutation per channel: selection and move speech queued for this commit joins this payload instead of
+            // replacing it, after the status fragments (#10 decision Q8). Only the status fragments above empty polite or
+            // decide `completed`, so a result never drops a month change or a completion, and an error keeps the results.
+            const own = takeSelection(), moved = takeMove();
+            overlays.announce(joined(joined(politePayload, own.polite), moved.polite), joined(joined(urgent, own.urgent), moved.urgent));
             if (politePayload) completionShown.current = completed;
         }
         for (const diagnostic of model.diagnostics) warn(diagnostic.path, diagnostic.reason, diagnostic.key);
@@ -210,9 +219,14 @@ export function useCalendarController<I, S>(input: CalendarProps<I, S>, surface?
             const key = `${model.range.start}/${model.range.end}/${model.range.timeZone}`;
             if (key !== lastRange.current) { lastRange.current = key; input.onVisibleRangeChange?.({...model.range}); }
         }
-    }, [model, currentNavigation, snapshot, currentAgenda, agenda, updateNavigation, focusDateCell, warn, input, overlays, save, takeSelection, cancelSelectionDraft]);
-    // Selection speech that no controller payload took in this commit.
-    useEffect(flushSelection);
+    }, [model, currentNavigation, snapshot, currentAgenda, agenda, updateNavigation, focusDateCell, warn, input, overlays, save, takeSelection, takeMove, cancelSelectionDraft]);
+    // Selection and move speech that no controller payload took in this commit, as one write per channel; then results still
+    // owed to inert endpoints are watched until they can be written.
+    useEffect(() => {
+        const own = takeSelection(), moved = takeMove(), polite = joined(own.polite, moved.polite), urgent = joined(own.urgent, moved.urgent);
+        if (polite || urgent) overlays.announce(polite, urgent);
+        watchMove();
+    });
 
     const navigate = (date: string, source: NavigationSource, sourceElement?: HTMLElement, kind: NavigationKind = 'date') => {
         const state = navRef.current;
@@ -232,7 +246,7 @@ export function useCalendarController<I, S>(input: CalendarProps<I, S>, surface?
         const state = navRef.current;
         if (state && snapshot) { save(); updateNavigation({...state, month: snapshot.month, date}); }
     };
-    return {model, today, agendaDate: currentAgenda?.date ?? null, focusDate, labelledBy, overlays, mirror, warn, selection,
+    return {model, today, agendaDate: currentAgenda?.date ?? null, focusDate, labelledBy, overlays, mirror, warn, selection, move,
         rootRef, gridRef, viewRef, weekdaysRef, agendaRef, todayRef, statusRef, politeRef, urgentRef, registerCell, onDateFocus, navigate, cancelNavigation,
         onViewFocus: (node: Element) => { lastFocus.current = {node, surface: 'view'}; },
         getDateCell,

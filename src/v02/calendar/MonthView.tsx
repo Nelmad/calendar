@@ -8,7 +8,7 @@ import {useMonthMeasurements, useWeekdayFit} from './useMonthMeasurements.js';
 import {useServerStyle} from '../primitives/serverStyle.js';
 import {useMessageDiagnostics, type CalendarController} from './useCalendarController.js';
 import type {CalendarDataModel, CalendarModel} from './model.js';
-import {AccentMarker, SlotContent, classes, resolveClass, surfaceStyle} from './slots.js';
+import {AccentMarker, PendingMarker, SlotContent, classes, resolveClass, surfaceStyle} from './slots.js';
 import {SelectionReason} from './SelectionControls.js';
 
 export type DateActivation = (date: string, input: 'pointer' | 'keyboard') => void;
@@ -139,8 +139,10 @@ function DataMonth<I, S>({controller, model, headingId, onDateActivate, popup, o
                                 isSelected: !!props.selection && props.selection.start < segment.segmentRange.end && segment.segmentRange.start < props.selection.end,
                                 isDragging: false,
                                 // §5.7: a month segment offers only the primary press (actions live in the agenda; item moves come in a later prerelease).
-                                isPending: false, isDisabled: !props.onItemPress};
+                                // isPending follows the accepted move states only, the same in every segment and the agenda row (#10).
+                                isPending: controller.move.isPending(item.id), isDisabled: !props.onItemPress};
                             return <div key={`${item.id}/${segment.segmentRange.start}`} data-item-id={item.id} data-view="month" data-selected={context.isSelected || undefined}
+                                data-pending={context.isPending || undefined}
                                 data-continues-before={segment.continuesBefore || undefined} data-continues-after={segment.continuesAfter || undefined}
                                 className={classes('nc-month-item', segment.entry.presentation === 'bar' ? 'nc-month-bar' : 'nc-month-chip', resolveClass(props.classNames?.item, context))}
                                 style={{insetInlineStart: `${segment.startColumn * 100 / 7}%`, inlineSize: `${(segment.endColumn - segment.startColumn) * 100 / 7}%`,
@@ -151,6 +153,7 @@ function DataMonth<I, S>({controller, model, headingId, onDateActivate, popup, o
                                 {props.renderItem ? <SlotContent slot="renderItem" className="nc-item-content">{props.renderItem(context)}</SlotContent> : <><span className="nc-item-time">{segment.entry.record.interval.kind === 'timed' && !segment.continuesBefore
                                     ? model.format.time(segment.entry.record.interval.start).text : ''}</span>
                                     {item.title.trim().length > 0 ? <bdi dir="auto">{title}</bdi> : <LocalizedText value={model.message('untitledItemLabel')}/>}</>}
+                                {context.isPending && <PendingMarker/>}
                             </div>;
                         })}
                     </div>}
