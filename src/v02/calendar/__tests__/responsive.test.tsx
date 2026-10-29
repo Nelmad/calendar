@@ -211,6 +211,17 @@ describe('the unmeasured marker of the view', () => {
         view.rerender(page()); expect(root()).toHaveAttribute('data-layout', 'mobile');
         expect(list.some(commit => commit.endsWith('+marker'))).toBe(false);
     });
+    it.each([[900, 'desktop'], [320, 'mobile']] as const)('never appears once a calendar mounted as a contract shell gets valid props (%s px)', (width, layout) => {
+        // A contract shell has no view and observes no width; the data render after it is not the first client render.
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const {list, onRender} = commits(), page = (timeZone: string) => <StrictMode><Profiler id="calendar" onRender={onRender}>
+            <Calendar {...input()} timeZone={timeZone} style={{width}}/></Profiler></StrictMode>;
+        const view = render(page('Mars/Olympus_Mons'));
+        expect(document.querySelector('.nc-calendar-view')).toBeNull();
+        view.rerender(page('UTC'));
+        expect(root()).toHaveAttribute('data-layout', layout); expect(marked()).toBe(0);
+        expect(list.some(commit => commit.endsWith('+marker'))).toBe(false);
+    });
     it('never comes back after resizes, breakpoint and layout changes, navigation, a data-state change or a StrictMode replay', () => {
         // An attribute record without an old value is an addition.
         const additions: string[] = [], added = (records: MutationRecord[]) => { for (const record of records) if (record.oldValue === null) additions.push((record.target as Element).className); };

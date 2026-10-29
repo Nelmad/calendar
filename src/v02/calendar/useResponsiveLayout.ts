@@ -26,7 +26,8 @@ function contentWidth(element: HTMLElement, window: Window) {
  * render of `auto` are mobile; a forced layout is used directly and never needs a measurement.
  * `unmeasured` marks the server and first client render of `auto` with the default breakpoint until the
  * first width decision commits: the stylesheet then sizes that compact month like the desktop one in a view
- * of at least the breakpoint. A render without those conditions ends it for good, as does any decision.
+ * of at least the breakpoint. A render without those conditions ends it for good, as does any decision and
+ * `end` (a render that observes no width, such as a contract shell, so that valid props later are not pre-sized).
  */
 export function useResolvedLayout(requested: unknown, breakpoint?: unknown) {
     const [measured, setMeasured] = useState<CalendarResolvedLayout | null>(null);
@@ -47,7 +48,9 @@ export function useResolvedLayout(requested: unknown, breakpoint?: unknown) {
         setUnmeasured(false);
         if (layout) setMeasured(layout); else setCarried(null);
     }, []);
-    return {layout: resolveLayout(forced(requested) ? requested : 'auto', measured, carried), forced: forced(requested), settle, unmeasured: unmeasured && presized};
+    // Ends the phase without a decision, keeping a carried layout (settle(null) would drop it).
+    const end = useCallback(() => setUnmeasured(false), []);
+    return {layout: resolveLayout(forced(requested) ? requested : 'auto', measured, carried), forced: forced(requested), settle, end, unmeasured: unmeasured && presized};
 }
 /**
  * Commit half: only a valid `auto` configuration observes the root content box, with exactly one
