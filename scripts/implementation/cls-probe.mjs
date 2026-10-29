@@ -236,6 +236,10 @@ async function main() {
     await build({configFile: false, logLevel: 'error', mode: 'production', define: {'process.env.NODE_ENV': '"production"'},
         resolve: {alias: [{find: /^react-dom$/, replacement: 'react-dom/profiling'}, {find: /^@nelmad\/calendar$/, replacement: calendar}], dedupe: ['react', 'react-dom']},
         build: {outDir: directory, minify: true, lib: {entry: join(here, 'cls-entry.tsx'), formats: ['es'], fileName: () => 'index.mjs'}}});
+    // The sources as they were built (an edit during the run does not change the record).
+    report.sourceHashes = Object.fromEntries(['src/v02/styles.css', 'src/v02/calendar/useResponsiveLayout.ts', 'src/v02/calendar/useCalendarController.ts',
+        'src/v02/calendar/CalendarShell.tsx', 'src/v02/core/responsive.ts', 'scripts/implementation/cls-entry.tsx', 'scripts/implementation/cls-probe.mjs',
+        'scripts/implementation/cls-budget.json'].map(path => [path, createHash('sha256').update(readFileSync(join(root, path))).digest('hex')]));
     const esm = await import(pathToFileURL(join(directory, 'index.mjs')));
     const module = readFileSync(join(directory, 'index.mjs'), 'utf8');
     const css = readFileSync(packageRoot ? resolve(packageRoot, 'dist/styles.css') : join(root, 'src/v02/styles.css'), 'utf8');
@@ -272,7 +276,7 @@ async function main() {
             const context = await (await classic()).newContext({viewport: {width: 677, height: 3000}}), target = await context.newPage();
             try {
                 await serve(target, server({fixture: 'band', layout}), '', false); await target.goto(`${origin}/`);
-                heights[layout] = await target.evaluate(() => document.documentElement.scrollHeight);
+                heights[layout] = await target.evaluate(() => document.getElementById('after').getBoundingClientRect().bottom + scrollY);
             } finally { await context.close(); }
         }
         assert.ok(heights.desktop > heights.mobile + 40, `desktop must be taller: ${JSON.stringify(heights)}`);
@@ -366,9 +370,6 @@ async function main() {
     report.verdict = filtered ? null : budgetVerdict(budget, results);
     report.harnessFailures = harnessFailures;
     report.outcome = harnessFailures || report.verdict?.exitCode ? 'fail' : filtered ? 'partial' : 'pass';
-    report.sourceHashes = Object.fromEntries(['src/v02/styles.css', 'src/v02/calendar/useResponsiveLayout.ts', 'src/v02/calendar/CalendarShell.tsx', 'src/v02/core/responsive.ts',
-        'scripts/implementation/cls-entry.tsx', 'scripts/implementation/cls-probe.mjs', 'scripts/implementation/cls-budget.json']
-        .map(path => [path, createHash('sha256').update(readFileSync(join(root, path))).digest('hex')]));
     save();
     for (const annotation of report.verdict?.annotations ?? []) console.log(annotation);
     const summary = budgetScenarios.filter(name => report.scenarios[name]).map(name => {
